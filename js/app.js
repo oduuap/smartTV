@@ -1,0 +1,767 @@
+// API Configuration
+const API_BASE_URL = 'https://api-ls.cdnokvip.com/api';
+const API_VIDEO_URL = 'https://api-ls.cdnokvip.com/api'; // URL để lấy video stream
+
+// Football matches data (sẽ được load từ API)
+let footballMatches = [];
+
+// Navigation state
+let currentScreen = 'screen-loading';
+let focusedIndex = 0;
+let focusableElements = [];
+
+// Initialize app
+document.addEventListener('DOMContentLoaded', function() {
+    initApp();
+    setupEventListeners();
+
+    // Show loading screen for 2 seconds then go to menu
+    setTimeout(function() {
+        showScreen('screen-menu');
+        window.history.pushState({ screen: 'screen-menu' }, '', '');
+    }, 2000);
+
+    // WebOS specific back button handler
+    if (window.webOSSystem) {
+        window.webOSSystem.platformBack = function() {
+            handleBackButton();
+        };
+    }
+});
+
+// Prevent exit confirmation dialog
+window.onbeforeunload = null;
+
+// WebOS back button handler
+if (window.PalmSystem) {
+    window.addEventListener('load', function() {
+        if (window.Mojo && window.Mojo.stageController) {
+            window.Mojo.stageController.pushScene({
+                name: 'main',
+                disableSceneScroller: true
+            });
+        }
+    });
+}
+
+// Handle webOS back key event
+document.addEventListener('webOSRelaunch', function(event) {
+    console.log('webOS Relaunch event');
+});
+
+document.addEventListener('webOSLocaleChange', function() {
+    console.log('webOS Locale change');
+});
+
+function initApp() {
+    console.log('SmartTV App Initialized');
+    // API sẽ được load khi click vào menu thể thao
+}
+
+// Load matches from API
+async function loadMatchesFromAPI() {
+    console.log('🔄 Starting to load matches from API...');
+    console.log('API URL:', `${API_BASE_URL}/get-livestream-group`);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/get-livestream-group`);
+        console.log('📡 API Response status:', response.status);
+
+        const data = await response.json();
+        console.log('📦 API Response data:', data);
+        console.log('data.value.datas length:', data.value?.datas?.length);
+
+        // Check if we have matches data (data.success might be undefined)
+        if (data.value && data.value.datas && Array.isArray(data.value.datas) && data.value.datas.length > 0) {
+            console.log(`✅ Found ${data.value.datas.length} matches in API response`);
+
+            // Sort: live matches first (isLiveHomePage = true)
+            const matches = data.value.datas.sort((a, b) => {
+                if (a.isLiveHomePage && !b.isLiveHomePage) return -1;
+                if (!a.isLiveHomePage && b.isLiveHomePage) return 1;
+                return 0;
+            });
+
+            // Convert API format to app format
+            footballMatches = matches.map(match => ({
+                id: match.matchId,
+                matchId: match.matchId,
+                title: `${match.homeName} vs ${match.awayName}`,
+                homeName: match.homeName,
+                awayName: match.awayName,
+                homeLogo: match.homeLogo,
+                awayLogo: match.awayLogo,
+                homeScore: match.homeScore,
+                awayScore: match.awayScore,
+                league: match.leagueName,
+                leagueShortName: match.leagueShortName,
+                leagueColor: match.leagueColor,
+                commentator: match.commentator,
+                commentatorAvatar: match.avatar,
+                isLive: match.isLiveHomePage,
+                status: match.status, // 0: chưa đá, 1: hiệp 1, 2: giải lao, 3: kết thúc
+                matchTime: match.matchTime,
+                viewNumber: match.viewNumber,
+                type: "hls" // Mặc định, sẽ lấy từ API video sau
+            }));
+
+            console.log(`✅ Loaded ${footballMatches.length} matches from API`);
+            console.log('First 3 matches:', footballMatches.slice(0, 3));
+            console.log('All match IDs:', footballMatches.map(m => m.matchId));
+        } else {
+            console.error('❌ Invalid API response format');
+            console.error('data.value:', data.value);
+            console.error('data.value.datas:', data.value?.datas);
+            loadFallbackMatches();
+        }
+    } catch (error) {
+        console.error('Error loading matches from API:', error);
+        loadFallbackMatches();
+    }
+}
+
+// Fallback data nếu API lỗi
+function loadFallbackMatches() {
+    footballMatches = [
+        {
+            id: 1,
+            matchId: "fallback1",
+            title: "Loading...",
+            homeName: "Loading",
+            awayName: "Matches",
+            homeLogo: "",
+            awayLogo: "",
+            league: "Please wait",
+            commentator: "System",
+            isLive: false,
+            type: "hls"
+        }
+    ];
+}
+
+// Setup event listeners
+function setupEventListeners() {
+    // Menu items click
+    const menuItems = document.querySelectorAll('#screen-menu .menu-item');
+    console.log(`📋 Found ${menuItems.length} menu items`);
+
+    menuItems.forEach((item, index) => {
+        const category = item.getAttribute('data-category');
+        console.log(`Menu item ${index + 1}: category="${category}"`);
+
+        item.addEventListener('click', function() {
+            const category = this.getAttribute('data-category');
+            console.log(`🖱️ Clicked menu item: ${category}`);
+
+            if (category === 'sports') {
+                console.log('🏀 Loading sports screen...');
+                showSportsScreen();
+            }
+        });
+    });
+
+    // Back buttons
+    document.querySelectorAll('.back-button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            showScreen('screen-menu');
+        });
+    });
+
+    document.querySelectorAll('.back-button-player').forEach(btn => {
+        btn.addEventListener('click', function() {
+            stopVideo();
+            showScreen('screen-sports');
+        });
+    });
+
+    // Keyboard navigation for TV remote
+    document.addEventListener('keydown', handleKeyPress);
+
+    // Additional back button handler for webOS - capture phase
+    document.addEventListener('keydown', function(event) {
+        if (event.keyCode === 461) { // webOS back button
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            return false;
+        }
+    }, true); // Use capture phase
+
+    // Handle browser back button (when back key is pressed)
+    window.addEventListener('popstate', function(event) {
+        console.log('Popstate event:', currentScreen);
+
+        if (currentScreen === 'screen-player') {
+            stopVideo();
+            showScreen('screen-sports');
+        } else if (currentScreen === 'screen-sports') {
+            showScreen('screen-menu');
+        } else {
+            // At main menu, close app
+            if (window.close) {
+                window.close();
+            }
+        }
+    });
+}
+
+// Show sports screen with football matches
+async function showSportsScreen() {
+    console.log('=== 🏀 showSportsScreen() CALLED ===');
+
+    showScreen('screen-sports');
+    console.log('✅ Switched to screen-sports');
+
+    const sportsList = document.querySelector('.sports-list');
+    console.log('📋 sportsList element:', sportsList);
+
+    // Force display grid
+    sportsList.style.display = 'grid';
+    sportsList.style.gridTemplateColumns = 'repeat(3, 1fr)';
+    sportsList.style.gap = '25px';
+
+    // Show loading message
+    sportsList.innerHTML = '<div class="loading-text" style="color: white; font-size: 48px; text-align: center; padding: 100px; grid-column: 1 / -1;">⏳ Đang tải trận đấu...</div>';
+
+    // Load matches from API
+    await loadMatchesFromAPI();
+
+    // Clear loading and show matches
+    sportsList.innerHTML = '';
+
+    // Show loading if no matches after API call
+    if (footballMatches.length === 0) {
+        sportsList.innerHTML = '<div class="loading-text" style="color: white; font-size: 48px; text-align: center; padding: 100px;">❌ Không có trận đấu</div>';
+        return;
+    }
+
+    console.log(`🎬 Rendering ${footballMatches.length} matches...`);
+
+    // Create a document fragment for better performance
+    const fragment = document.createDocumentFragment();
+
+    footballMatches.forEach((match, index) => {
+        try {
+            const matchItem = document.createElement('div');
+            matchItem.className = 'match-item focusable';
+            matchItem.style.display = 'flex'; // Force display
+            matchItem.style.visibility = 'visible'; // Force visible
+
+            // Add live badge if match is live
+            if (match.isLive) {
+                matchItem.classList.add('live-match');
+            }
+
+            matchItem.setAttribute('data-match-id', match.matchId);
+            matchItem.setAttribute('tabindex', index);
+
+            console.log(`Creating match item ${index + 1}:`, match.homeName, 'vs', match.awayName);
+
+        // Get match minute for live matches (only for status 1 or 2)
+        let matchMinute = '';
+        try {
+            if (match.status === 1 && match.halfStartTime && !isNaN(match.halfStartTime) && match.halfStartTime > 0) {
+                const elapsed = Math.floor((Date.now() / 1000 - match.halfStartTime) / 60);
+                matchMinute = (elapsed > 0 && elapsed < 200) ? `${elapsed}'` : ''; // Max 200 phút
+            } else if (match.status === 2) {
+                matchMinute = 'HT'; // Half time
+            }
+            // Status 3 (finished) - không hiển thị phút
+        } catch (error) {
+            console.error('Error calculating match minute:', error);
+            matchMinute = '';
+        }
+
+        // Build HTML theo thiết kế mới
+        matchItem.innerHTML = `
+            <div class="match-card">
+                <div class="match-card-header">
+                    <span class="league-name">${match.leagueShortName || match.league}</span>
+                    <div class="match-info-right">
+                        ${match.viewNumber ? `<span class="view-count">🔥 ${formatViewCount(match.viewNumber)}</span>` : ''}
+                        ${match.isLive ? '<span class="live-badge-new">Live</span>' : ''}
+                    </div>
+                </div>
+
+                <div class="match-card-body">
+                    <div class="team-side home-side">
+                        <img src="${match.homeLogo}" onerror="this.src='https://via.placeholder.com/100x100?text=?'" alt="${match.homeName}" class="team-logo-big">
+                        <div class="team-name-big">${match.homeName}</div>
+                    </div>
+
+                    <div class="match-score-area">
+                        ${matchMinute ? `<div class="match-minute">${matchMinute}</div>` : ''}
+                        ${match.status > 0 ? `
+                            <div class="score-box">
+                                <span class="score-home">${match.homeScore || 0}</span>
+                                <span class="score-separator">:</span>
+                                <span class="score-away">${match.awayScore || 0}</span>
+                            </div>
+                        ` : `
+                            <div class="match-time-box">
+                                ${formatMatchTime(match.matchTime)}
+                            </div>
+                        `}
+                    </div>
+
+                    <div class="team-side away-side">
+                        <img src="${match.awayLogo}" onerror="this.src='https://via.placeholder.com/100x100?text=?'" alt="${match.awayName}" class="team-logo-big">
+                        <div class="team-name-big">${match.awayName}</div>
+                    </div>
+                </div>
+
+                <div class="match-card-footer">
+                    <div class="commentator-info">
+                        <img src="${match.commentatorAvatar}" class="commentator-avatar-new" onerror="this.src='https://via.placeholder.com/50x50?text=BLV'">
+                        <span class="commentator-name-new">${match.commentator}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+            matchItem.addEventListener('click', function() {
+                const matchId = this.getAttribute('data-match-id');
+                playMatchById(matchId);
+            });
+
+            fragment.appendChild(matchItem);
+        } catch (error) {
+            console.error(`Error rendering match ${index + 1}:`, error);
+            console.error('Match data:', match);
+        }
+    });
+
+    // Append all items at once
+    sportsList.appendChild(fragment);
+
+    console.log(`✅ Rendered ${sportsList.children.length} match items to DOM`);
+    console.log('First item in sportsList:', sportsList.children[0]);
+
+    // Update focusable elements and set focus to first item
+    updateFocusableElements();
+    setFocus(0);
+}
+
+// Format view count (42000 -> 42K)
+function formatViewCount(count) {
+    if (count >= 1000000) {
+        return (count / 1000000).toFixed(1) + 'M';
+    } else if (count >= 1000) {
+        return (count / 1000).toFixed(0) + 'K';
+    }
+    return count;
+}
+
+// Format match time safely
+function formatMatchTime(timestamp) {
+    try {
+        if (!timestamp || isNaN(timestamp)) {
+            return '--:--';
+        }
+        const date = new Date(timestamp * 1000);
+        if (isNaN(date.getTime())) {
+            return '--:--';
+        }
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+    } catch (error) {
+        console.error('Error formatting match time:', error);
+        return '--:--';
+    }
+}
+
+// HLS player instance
+let hlsPlayer = null;
+
+// Play match by ID (call API to get video link)
+async function playMatchById(matchId) {
+    console.log(`🎬 Loading video for match: ${matchId}`);
+
+    try {
+        // Call API POST to get match detail and video link
+        const response = await fetch(`${API_BASE_URL}/match-detail?matchId=${matchId}`, {
+            method: 'POST',
+            headers: {
+                'accept': '*/*'
+            },
+            body: ''
+        });
+
+        console.log('📡 Match detail API response status:', response.status);
+
+        const data = await response.json();
+        console.log('📦 Match detail data:', data);
+
+        let videoUrl = null;
+        let matchData = null;
+
+        // Try to get linkLive from match detail
+        if (data.value && data.value.datas) {
+            matchData = data.value.datas;
+            videoUrl = matchData.linkLive;
+        }
+
+        // If no linkLive, try fallback API
+        if (!videoUrl) {
+            console.log('⚠️ No linkLive found, trying fallback API...');
+
+            try {
+                const fallbackResponse = await fetch(`${API_BASE_URL}/get-link-register?domain=LinkVideo`);
+                const fallbackData = await fallbackResponse.json();
+
+                console.log('📦 Fallback API response:', fallbackData);
+
+                // Parse response structure: value.data[] array, find domain "LinkVideo"
+                if (fallbackData.value && fallbackData.value.data && Array.isArray(fallbackData.value.data)) {
+                    const linkVideoItem = fallbackData.value.data.find(item => item.domain === 'LinkVideo');
+                    if (linkVideoItem && linkVideoItem.link) {
+                        videoUrl = linkVideoItem.link;
+                        console.log(`✅ Got fallback video URL: ${videoUrl}`);
+                    } else {
+                        console.error('❌ LinkVideo not found in fallback data');
+                    }
+                } else {
+                    console.error('❌ Invalid fallback API response structure');
+                }
+            } catch (fallbackError) {
+                console.error('❌ Fallback API error:', fallbackError);
+            }
+        } else {
+            console.log(`✅ Got video URL from match detail: ${videoUrl}`);
+        }
+
+        // If we have video URL, play it
+        if (videoUrl) {
+            // Get match info for title
+            const match = footballMatches.find(m => m.matchId === matchId);
+            const title = match ? match.title : (matchData ? `${matchData.homeName} vs ${matchData.awayName}` : 'Live Video');
+
+            playVideo({
+                title: title,
+                videoUrl: videoUrl,
+                type: 'hls',
+                commentators: matchData?.listCommentators || [],
+                matchInfo: matchData ? {
+                    league: matchData.leagueName,
+                    homeScore: matchData.homeScore,
+                    awayScore: matchData.awayScore,
+                    status: matchData.status,
+                    commentator: matchData.commentator,
+                    commentatorAvatar: matchData.avatar || match?.commentatorAvatar
+                } : null
+            });
+        } else {
+            console.error('❌ No video link found from both APIs');
+            alert('Không tìm thấy link video cho trận đấu này!');
+        }
+    } catch (error) {
+        console.error('❌ Error loading video stream:', error);
+        alert('Không thể tải video. Vui lòng thử lại!');
+    }
+}
+
+// Play match video (old version - kept for compatibility)
+function playMatch(matchId) {
+    const match = footballMatches.find(m => m.id === matchId || m.matchId === matchId);
+    if (match) {
+        playVideo({
+            title: match.title,
+            videoUrl: match.videoUrl || `https://hls.686868.me/live/${matchId}/index.m3u8`,
+            type: match.type || 'hls'
+        });
+    }
+}
+
+// Play video (unified function)
+function playVideo(videoData) {
+    const { title, videoUrl, type, commentators, matchInfo } = videoData;
+
+    console.log('▶️ Playing video:', title);
+    console.log('Video URL:', videoUrl);
+    console.log('Commentators:', commentators);
+
+    if (!videoUrl) {
+        console.error('No video URL provided');
+        return;
+    }
+
+    const videoPlayer = document.getElementById('video-player');
+    const videoTitle = document.getElementById('video-title');
+    const videoCommentatorsDiv = document.getElementById('video-commentators');
+
+    videoTitle.textContent = title;
+
+    // Render commentators if available
+    if (commentators && commentators.length > 0) {
+        videoCommentatorsDiv.innerHTML = commentators.map(blv => `
+            <div class="blv-item">
+                <img src="${blv.avatar}" alt="${blv.commentator}" onerror="this.src='https://via.placeholder.com/40x40?text=BLV'">
+                <span>${blv.commentator}</span>
+            </div>
+        `).join('');
+    } else if (matchInfo && matchInfo.commentator) {
+        // Fallback to single commentator from matchInfo
+        videoCommentatorsDiv.innerHTML = `
+            <div class="blv-item">
+                <img src="${matchInfo.commentatorAvatar || 'https://via.placeholder.com/40x40?text=BLV'}" alt="${matchInfo.commentator}">
+                <span>${matchInfo.commentator}</span>
+            </div>
+        `;
+    } else {
+        videoCommentatorsDiv.innerHTML = '';
+    }
+
+    // Clean up previous HLS instance
+    if (hlsPlayer) {
+        hlsPlayer.destroy();
+        hlsPlayer = null;
+    }
+
+    showScreen('screen-player');
+
+    // Show video info for 10 seconds then hide
+    const videoInfo = document.querySelector('.video-info');
+    let hideTimeout;
+
+    const showVideoInfo = () => {
+        if (videoInfo) {
+            videoInfo.style.display = 'block';
+            videoInfo.style.opacity = '1';
+
+            // Clear previous timeout
+            if (hideTimeout) {
+                clearTimeout(hideTimeout);
+            }
+
+            // Set new timeout to hide after 10 seconds
+            hideTimeout = setTimeout(() => {
+                videoInfo.style.opacity = '0';
+                setTimeout(() => {
+                    videoInfo.style.display = 'none';
+                }, 500); // Wait for fade out transition
+            }, 10000); // 10 seconds
+        }
+    };
+
+    // Show info initially
+    showVideoInfo();
+
+    // Show info again when user moves mouse or presses key (for desktop testing)
+    const playerContainer = document.querySelector('.player-container');
+    if (playerContainer) {
+        playerContainer.addEventListener('mousemove', showVideoInfo);
+        document.addEventListener('keydown', showVideoInfo);
+    }
+
+    // Check if HLS stream
+    if (type === 'hls' || videoUrl.includes('.m3u8')) {
+        // Use HLS.js for HLS streams
+        if (Hls.isSupported()) {
+            hlsPlayer = new Hls({
+                enableWorker: true,
+                lowLatencyMode: true,
+                backBufferLength: 90
+            });
+            hlsPlayer.loadSource(videoUrl);
+            hlsPlayer.attachMedia(videoPlayer);
+            hlsPlayer.on(Hls.Events.MANIFEST_PARSED, function() {
+                videoPlayer.play();
+            });
+
+            // Error handling
+            hlsPlayer.on(Hls.Events.ERROR, function(event, data) {
+                console.error('HLS Error:', data);
+                if (data.fatal) {
+                    switch(data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            console.log('Network error, trying to recover...');
+                            hlsPlayer.startLoad();
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            console.log('Media error, trying to recover...');
+                            hlsPlayer.recoverMediaError();
+                            break;
+                        default:
+                            hlsPlayer.destroy();
+                            break;
+                    }
+                }
+            });
+        }
+        // Native HLS support (Safari, webOS)
+        else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
+            videoPlayer.src = videoUrl;
+            videoPlayer.addEventListener('loadedmetadata', function() {
+                videoPlayer.play();
+            });
+        }
+    } else {
+        // Regular video (MP4, FLV, etc.)
+        videoPlayer.src = videoUrl;
+        videoPlayer.play();
+    }
+}
+
+// Stop video
+function stopVideo() {
+    const videoPlayer = document.getElementById('video-player');
+    videoPlayer.pause();
+    videoPlayer.src = '';
+
+    // Clean up HLS player
+    if (hlsPlayer) {
+        hlsPlayer.destroy();
+        hlsPlayer = null;
+    }
+}
+
+// Screen management
+function showScreen(screenId) {
+    // Remove all focused states before switching screens
+    document.querySelectorAll('.focused').forEach(el => {
+        el.classList.remove('focused');
+    });
+
+    // Hide all screens
+    document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.remove('active');
+    });
+
+    // Show target screen
+    const targetScreen = document.getElementById(screenId);
+    targetScreen.classList.add('active');
+    currentScreen = screenId;
+
+    // Push state to history to handle back button
+    if (screenId !== 'screen-menu') {
+        window.history.pushState({ screen: screenId }, '', '');
+    }
+
+    // Update focusable elements
+    updateFocusableElements();
+    setFocus(0);
+}
+
+// Focus management
+function updateFocusableElements() {
+    const activeScreen = document.getElementById(currentScreen);
+    focusableElements = Array.from(activeScreen.querySelectorAll('.focusable'));
+    focusedIndex = 0;
+}
+
+function setFocus(index) {
+    // Remove focus from all elements
+    focusableElements.forEach(el => el.classList.remove('focused'));
+
+    // Add focus to target element
+    if (focusableElements[index]) {
+        focusedIndex = index;
+        focusableElements[index].classList.add('focused');
+        focusableElements[index].focus();
+    }
+}
+
+function moveFocus(direction) {
+    let newIndex = focusedIndex;
+
+    // For menu screen and sports screen, use grid navigation
+    if (currentScreen === 'screen-menu' || currentScreen === 'screen-sports') {
+        const columns = currentScreen === 'screen-menu' ? 4 : 3;
+        const currentRow = Math.floor(focusedIndex / columns);
+        const currentCol = focusedIndex % columns;
+
+        if (direction === 'left') {
+            newIndex = Math.max(0, focusedIndex - 1);
+        } else if (direction === 'right') {
+            newIndex = Math.min(focusableElements.length - 1, focusedIndex + 1);
+        } else if (direction === 'up') {
+            // Move up 1 row
+            newIndex = Math.max(0, focusedIndex - columns);
+        } else if (direction === 'down') {
+            // Move down 1 row
+            newIndex = Math.min(focusableElements.length - 1, focusedIndex + columns);
+        }
+    } else {
+        // For other screens, use up/down navigation
+        if (direction === 'up') {
+            newIndex = Math.max(0, focusedIndex - 1);
+        } else if (direction === 'down') {
+            newIndex = Math.min(focusableElements.length - 1, focusedIndex + 1);
+        } else if (direction === 'left') {
+            newIndex = Math.max(0, focusedIndex - 1);
+        } else if (direction === 'right') {
+            newIndex = Math.min(focusableElements.length - 1, focusedIndex + 1);
+        }
+    }
+
+    setFocus(newIndex);
+}
+
+// Handle TV remote control keys
+function handleKeyPress(event) {
+    console.log('Key pressed:', event.keyCode);
+
+    switch(event.keyCode) {
+        case 37: // Left arrow
+            moveFocus('left');
+            event.preventDefault();
+            break;
+        case 38: // Up arrow
+            moveFocus('up');
+            event.preventDefault();
+            break;
+        case 39: // Right arrow
+            moveFocus('right');
+            event.preventDefault();
+            break;
+        case 40: // Down arrow
+            moveFocus('down');
+            event.preventDefault();
+            break;
+        case 13: // Enter/OK button
+            if (focusableElements[focusedIndex]) {
+                focusableElements[focusedIndex].click();
+            }
+            event.preventDefault();
+            break;
+        case 461: // Back button (webOS)
+        case 8: // Backspace (for testing)
+        case 27: // Escape (for testing)
+            // Prevent default immediately
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+
+            handleBackButton(event);
+
+            // Return false to prevent any further handling
+            return false;
+        case 415: // Play button
+            const videoPlayer = document.getElementById('video-player');
+            if (currentScreen === 'screen-player') {
+                if (videoPlayer.paused) {
+                    videoPlayer.play();
+                } else {
+                    videoPlayer.pause();
+                }
+            }
+            event.preventDefault();
+            break;
+    }
+}
+
+// Handle back button
+function handleBackButton(event) {
+    if (currentScreen === 'screen-player') {
+        stopVideo();
+        showScreen('screen-sports');
+    } else if (currentScreen === 'screen-sports') {
+        showScreen('screen-menu');
+    } else if (currentScreen === 'screen-menu') {
+        // At main menu, close the app
+        if (window.close) {
+            window.close();
+        }
+    }
+}

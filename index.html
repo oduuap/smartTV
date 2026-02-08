@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports TV</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Screen 0: Loading Screen -->
+    <div id="screen-loading" class="screen active">
+        <div class="loading-container">
+            <div class="loading-logo">
+                <img src="images/logo.png" alt="Logo" class="loading-logo-image">
+                <h1 class="loading-text">SPORTS TV LUONG SON</h1>
+            </div>
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+
+    <!-- Screen 1: Main Menu -->
+    <div id="screen-menu" class="screen">
+        <div class="menu-container">
+            <div class="menu-item focusable" data-category="sports" tabindex="0">
+                <div class="menu-number">1</div>
+                <div class="menu-text">Thể Thao 🔴</div>
+            </div>
+            <div class="menu-item focusable" data-category="movies" tabindex="1">
+                <div class="menu-number">2</div>
+                <div class="menu-text">Phim</div>
+            </div>
+            <div class="menu-item focusable" data-category="news" tabindex="2">
+                <div class="menu-number">3</div>
+                <div class="menu-text">Tin Tức</div>
+            </div>
+            <div class="menu-item focusable" data-category="music" tabindex="3">
+                <div class="menu-number">4</div>
+                <div class="menu-text">Âm Nhạc</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Screen 2: Sports List -->
+    <div id="screen-sports" class="screen">
+        <div class="sports-list">
+            <!-- Will be populated dynamically -->
+        </div>
+    </div>
+
+    <!-- Screen 3: Video Player -->
+    <div id="screen-player" class="screen">
+        <div class="player-container">
+            <button class="back-button-player focusable">← Quay lại</button>
+            <video id="video-player" controls autoplay>
+                Your browser does not support the video tag.
+            </video>
+            <div class="video-info">
+                <h2 id="video-title"></h2>
+                <div id="video-commentators" class="video-commentators"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HLS.js library for HLS streaming support -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
