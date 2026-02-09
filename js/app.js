@@ -220,8 +220,57 @@ async function showSportsScreen() {
     sportsList.style.gridTemplateColumns = 'repeat(3, 1fr)';
     sportsList.style.gap = '25px';
 
-    // Show loading message
-    sportsList.innerHTML = '<div class="loading-text" style="color: white; font-size: 48px; text-align: center; padding: 100px; grid-column: 1 / -1;">⏳ Đang tải trận đấu...</div>';
+    // Show loading message with SmartTV style
+    sportsList.innerHTML = `
+        <div class="loading-container" style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 150px 0;">
+            <div class="spinner-container" style="position: relative; width: 120px; height: 120px; margin-bottom: 40px;">
+                <div class="spinner" style="
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    border: 8px solid rgba(255, 255, 255, 0.1);
+                    border-top: 8px solid #00A8E8;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                "></div>
+                <div class="spinner-inner" style="
+                    position: absolute;
+                    top: 20px;
+                    left: 20px;
+                    width: calc(100% - 40px);
+                    height: calc(100% - 40px);
+                    border: 6px solid rgba(255, 255, 255, 0.05);
+                    border-bottom: 6px solid #FF6B35;
+                    border-radius: 50%;
+                    animation: spin 1.5s linear infinite reverse;
+                "></div>
+            </div>
+            <div class="loading-text" style="
+                color: white;
+                font-size: 32px;
+                font-weight: 600;
+                text-align: center;
+                margin-bottom: 15px;
+                letter-spacing: 1px;
+            ">Đang tải trận đấu</div>
+            <div class="loading-dots" style="
+                color: rgba(255, 255, 255, 0.6);
+                font-size: 48px;
+                text-align: center;
+                animation: pulse 1.5s ease-in-out infinite;
+            ">...</div>
+        </div>
+        <style>
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            @keyframes pulse {
+                0%, 100% { opacity: 0.3; }
+                50% { opacity: 1; }
+            }
+        </style>
+    `;
 
     // Load matches from API
     await loadMatchesFromAPI();
