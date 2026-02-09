@@ -1,6 +1,5 @@
 // API Configuration
 const API_BASE_URL = 'https://api-ls.cdnokvip.com/api';
-const API_VIDEO_URL = 'https://api-ls.cdnokvip.com/api'; // URL để lấy video stream
 
 // Football matches data (sẽ được load từ API)
 let footballMatches = [];

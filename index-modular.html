@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sports TV</title>
+    <title>Sports TV - Modular</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -23,7 +23,7 @@
         <div class="menu-container">
             <div class="menu-item focusable" data-category="sports" tabindex="0">
                 <div class="menu-number">1</div>
-                <div class="menu-text">Thể Thao</div>
+                <div class="menu-text">Thể Thao 🔴</div>
             </div>
             <div class="menu-item focusable" data-category="movies" tabindex="1">
                 <div class="menu-number">2</div>
@@ -64,13 +64,20 @@
     <!-- HLS.js library for HLS streaming support -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
-    <!-- Load modular scripts in order (no ES6 modules) -->
+    <!-- IMPORTANT: Load scripts in this order -->
+    <!-- 1. Config first (defines global constants) -->
     <script src="js/config-app.js"></script>
+
+    <!-- 2. Utility modules (no dependencies on other modules) -->
     <script src="js/api-service-app.js"></script>
     <script src="js/ui-renderer-app.js"></script>
+
+    <!-- 3. Feature modules (may depend on config and utils) -->
     <script src="js/video-player-app.js"></script>
     <script src="js/input-handler-app.js"></script>
     <script src="js/screen-manager-app.js"></script>
+
+    <!-- 4. Main app last (depends on all modules above) -->
     <script src="js/app-main.js"></script>
 </body>
 </html>
