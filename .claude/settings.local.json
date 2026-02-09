@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(ls:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(ssh:*)",
+      "Bash(ares:*)",
+      "Bash(npm install:*)",
+      "Bash(/opt/homebrew/bin/ares-package:*)",
+      "Bash(export PATH=\"/opt/homebrew/opt/node@20/bin:$PATH\")",
+      "Bash(git checkout:*)",
+      "Bash(du:*)"
     ]
   }
 }

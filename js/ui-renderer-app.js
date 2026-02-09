@@ -99,9 +99,18 @@ function renderMatchList(matches, container, onClickCallback) {
     // Clear container
     container.innerHTML = '';
 
+    // Force Flexbox for LG TV 2020 (Grid not supported)
+    container.style.display = 'flex';
+    container.style.flexWrap = 'wrap';
+    container.style.justifyContent = 'flex-start';
+    container.style.alignContent = 'flex-start';
+    container.style.width = '100%';
+
+    console.log('📺 Flexbox applied for LG TV 2020');
+
     // Show error if no matches
     if (!matches || matches.length === 0) {
-        container.innerHTML = '<div class="loading-text" style="color: white; font-size: 48px; text-align: center; padding: 100px;">❌ Không có trận đấu</div>';
+        container.innerHTML = '<div class="loading-text" style="color: white; font-size: 48px; text-align: center; padding: 100px; width: 100%;">❌ Không có trận đấu</div>';
         return;
     }
 
@@ -114,8 +123,19 @@ function renderMatchList(matches, container, onClickCallback) {
         try {
             var matchItem = document.createElement('div');
             matchItem.className = 'match-item focusable';
-            matchItem.style.display = 'flex';
+            // Flexbox: 3 items per row
+            matchItem.style.display = 'block';
+            matchItem.style.width = 'calc(33.333% - 17px)';
+            matchItem.style.marginRight = '25px';
+            matchItem.style.marginBottom = '25px';
+            matchItem.style.minWidth = '0';
             matchItem.style.visibility = 'visible';
+            matchItem.style.boxSizing = 'border-box';
+
+            // Remove right margin from every 3rd item
+            if ((index + 1) % 3 === 0) {
+                matchItem.style.marginRight = '0';
+            }
 
             // Add live badge if match is live
             if (match.isLive) {

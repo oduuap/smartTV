@@ -91,105 +91,36 @@ h1 {
     background: transparent;
 }
 
-.loading-logo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 80px;
-    background: transparent;
-}
-
-.loading-logo-image {
-    width: 300px;
-    height: auto;
-    margin-bottom: 40px;
-    animation: pulse-glow 2s ease-in-out infinite;
-    filter: drop-shadow(0 0 30px rgba(0, 212, 255, 0.8));
-    object-fit: contain;
-}
-
-.loading-circle {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #00d4ff 0%, #0066ff 100%);
-    box-shadow: 0 0 80px rgba(0, 212, 255, 0.8);
-    animation: pulse-glow 2s ease-in-out infinite;
-    margin-bottom: 40px;
-    display: none; /* Hide circle, show logo instead */
-}
-
 .loading-text {
     font-size: 100px;
     font-weight: 900;
     color: #FFD700;
     text-shadow:
-        0 0 60px rgba(255, 215, 0, 0.9),
+        0 0 40px rgba(255, 215, 0, 0.8),
         3px 3px 0px #000,
         -3px -3px 0px #000,
         3px -3px 0px #000,
-        -3px 3px 0px #000,
-        5px 5px 20px rgba(0, 0, 0, 1);
+        -3px 3px 0px #000;
     letter-spacing: 8px;
-    animation: text-glow-gold 2s ease-in-out infinite;
-    margin-top: 20px;
     text-align: center;
     -webkit-text-stroke: 2px #000;
+    margin-bottom: 40px;
 }
 
-.loading-spinner {
-    width: 80px;
-    height: 80px;
-    border: 8px solid rgba(255, 255, 255, 0.2);
-    border-top: 8px solid #00d4ff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+.loading-dots {
+    font-size: 80px;
+    color: white;
+    letter-spacing: 20px;
+    animation: blink 1.5s ease-in-out infinite;
 }
 
-@keyframes pulse-glow {
+@keyframes blink {
     0%, 100% {
-        transform: scale(1);
-        box-shadow: 0 0 80px rgba(0, 212, 255, 0.8);
+        opacity: 1;
     }
     50% {
-        transform: scale(1.05);
-        box-shadow: 0 0 120px rgba(0, 212, 255, 1);
+        opacity: 0.3;
     }
-}
-
-@keyframes text-glow {
-    0%, 100% {
-        text-shadow: 0 0 40px rgba(0, 212, 255, 0.8);
-    }
-    50% {
-        text-shadow: 0 0 60px rgba(0, 212, 255, 1);
-    }
-}
-
-@keyframes text-glow-gold {
-    0%, 100% {
-        text-shadow:
-            0 0 60px rgba(255, 215, 0, 0.9),
-            3px 3px 0px #000,
-            -3px -3px 0px #000,
-            3px -3px 0px #000,
-            -3px 3px 0px #000,
-            5px 5px 20px rgba(0, 0, 0, 1);
-    }
-    50% {
-        text-shadow:
-            0 0 80px rgba(255, 215, 0, 1),
-            3px 3px 0px #000,
-            -3px -3px 0px #000,
-            3px -3px 0px #000,
-            -3px 3px 0px #000,
-            5px 5px 30px rgba(0, 0, 0, 1);
-    }
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
 }
 
 /* Main Menu Screen */
@@ -330,15 +261,17 @@ h1 {
 }
 
 .sports-list {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 25px;
-    width: 100%;
-    max-width: 1800px;
-    margin: 0 auto;
-    padding: 20px 40px 40px 40px;
-    align-items: start;
-    box-sizing: border-box;
+    /* Use Flexbox for LG TV 2020 (webOS 5.0 - Grid not supported) */
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+    align-content: flex-start !important;
+    width: 100% !important;
+    max-width: 1800px !important;
+    margin: 0 auto !important;
+    padding: 20px 40px 40px 40px !important;
+    box-sizing: border-box !important;
+    -webkit-box-sizing: border-box;
 }
 
 /* Hide scrollbar but keep functionality */
@@ -355,9 +288,21 @@ h1 {
 .match-item {
     cursor: pointer;
     transition: all 0.3s ease;
-    width: 100%;
-    min-width: 0;
+    /* Flexbox: 3 items per row with gaps */
+    width: calc(33.333% - 17px) !important;
+    max-width: calc(33.333% - 17px) !important;
+    min-width: 0 !important;
     height: auto;
+    margin-right: 25px !important;
+    margin-bottom: 25px !important;
+    display: block !important;
+    box-sizing: border-box !important;
+    -webkit-box-sizing: border-box;
+}
+
+/* Remove margin from every 3rd item (end of row) */
+.match-item:nth-child(3n) {
+    margin-right: 0 !important;
 }
 
 .match-item:hover,

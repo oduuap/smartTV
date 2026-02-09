@@ -1,0 +1,32 @@
+# Ignore git files
+.git
+.gitignore
+.github
+
+# Ignore Claude files
+.claude
+
+# Ignore build artifacts
+*.ipk
+*.zip
+*.apk
+
+# Ignore documentation
+*.md
+README.txt
+CAI-DAT.txt
+GUI-CHO-NGUOI-KHAC.txt
+
+# Ignore scripts
+install.sh
+install.bat
+deploy.sh
+deploy.bat
+
+# Ignore Mac files
+.DS_Store
+._.DS_Store
+
+# Ignore node modules if any
+node_modules
+package-lock.json

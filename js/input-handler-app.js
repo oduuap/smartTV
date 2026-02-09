@@ -6,6 +6,10 @@
 var focusedIndex = 0;
 var focusableElements = [];
 
+// Throttle to prevent key stuck on TV
+var isNavigating = false;
+var NAV_THROTTLE_MS = 80; // 80ms delay between navigation
+
 // Update focusable elements based on current screen
 function updateFocusableElements() {
     var activeScreen = document.getElementById(currentScreen);
@@ -31,8 +35,18 @@ function setFocus(index) {
     }
 }
 
-// Move focus in specified direction
+// Move focus in specified direction (throttled to prevent stuck)
 function moveFocus(direction) {
+    // Throttle navigation to prevent key stuck on TV
+    if (isNavigating) {
+        return;
+    }
+
+    isNavigating = true;
+    setTimeout(function() {
+        isNavigating = false;
+    }, NAV_THROTTLE_MS);
+
     var newIndex = focusedIndex;
 
     // For menu screen and sports screen, use grid navigation
@@ -121,20 +135,13 @@ function handleKeyPress(event) {
 
 // Initialize input handlers
 function initInputHandlers() {
+    console.log('🎮 Initializing input handlers...');
+
     // Setup keyboard navigation
     document.addEventListener('keydown', handleKeyPress);
 
-    // Additional back button handler for webOS - capture phase
-    document.addEventListener('keydown', function(event) {
-        if (event.keyCode === KEY_CODES.BACK_WEBOS) {
-            event.preventDefault();
-            event.stopPropagation();
-            event.stopImmediatePropagation();
-            return false;
-        }
-    }, true); // Use capture phase
-
     console.log('✅ Input handlers initialized');
+    console.log('📋 Focusable elements:', focusableElements.length);
 }
 
 console.log('✅ Input Handler loaded');

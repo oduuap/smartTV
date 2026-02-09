@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Grid Test</title>
+    <style>
+        body {
+            background: black;
+            color: white;
+            font-family: Arial;
+            padding: 40px;
+        }
+
+        .test-container {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 20px !important;
+            width: 100% !important;
+            background: rgba(255,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 40px;
+        }
+
+        .test-item {
+            background: blue;
+            padding: 40px;
+            text-align: center;
+            border: 2px solid white;
+        }
+
+        h1 {
+            color: yellow;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Grid Layout Test - TV LG 2020</h1>
+
+    <p>Nếu thấy 3 cột → Grid hoạt động ✅</p>
+    <p>Nếu thấy 1 cột → Grid bị lỗi ❌</p>
+
+    <div class="test-container">
+        <div class="test-item">Item 1</div>
+        <div class="test-item">Item 2</div>
+        <div class="test-item">Item 3</div>
+        <div class="test-item">Item 4</div>
+        <div class="test-item">Item 5</div>
+        <div class="test-item">Item 6</div>
+    </div>
+
+    <script>
+        // Log CSS info
+        var container = document.querySelector('.test-container');
+        console.log('Container display:', window.getComputedStyle(container).display);
+        console.log('Container grid-template-columns:', window.getComputedStyle(container).gridTemplateColumns);
+        console.log('User Agent:', navigator.userAgent);
+    </script>
+</body>
+</html>
