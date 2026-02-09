@@ -1,0 +1,17 @@
+.git
+.gitignore
+.github
+.claude
+*.ipk
+*.zip
+*.apk
+*.md
+README.txt
+CAI-DAT.txt
+GUI-CHO-NGUOI-KHAC.txt
+install.sh
+install.bat
+deploy.sh
+deploy.bat
+.DS_Store
+node_modules

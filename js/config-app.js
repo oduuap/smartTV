@@ -6,7 +6,7 @@
 var APP_CONFIG = {
     API_URL: 'https://api-ls.cdnokvip.com/api', // API base URL cho tất cả requests
     CACHE_DURATION: 5 * 60 * 1000, // 5 minutes
-    LOADING_SCREEN_DURATION: 2000, // 2 seconds
+    LOADING_SCREEN_DURATION: 1000, // 1 second (giảm từ 3s)
     VIDEO_INFO_DISPLAY_DURATION: 10000, // 10 seconds
     VIDEO_INFO_FADE_DURATION: 500 // 0.5 seconds
 };

@@ -10,11 +10,8 @@
     <!-- Screen 0: Loading Screen -->
     <div id="screen-loading" class="screen active">
         <div class="loading-container">
-            <div class="loading-logo">
-                <img src="images/logo.png" alt="Logo" class="loading-logo-image">
-                <h1 class="loading-text">SPORTS TV LUONG SON</h1>
-            </div>
-            <div class="loading-spinner"></div>
+            <h1 class="loading-text">SPORTS TV LUONG SON</h1>
+            <div class="loading-dots">...</div>
         </div>
     </div>
 
@@ -51,7 +48,7 @@
     <div id="screen-player" class="screen">
         <div class="player-container">
             <button class="back-button-player focusable">← Quay lại</button>
-            <video id="video-player" controls autoplay>
+            <video id="video-player" controls playsinline webkit-playsinline>
                 Your browser does not support the video tag.
             </video>
             <div class="video-info">

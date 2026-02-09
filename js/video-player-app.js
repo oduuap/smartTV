@@ -14,11 +14,16 @@ function playVideo(videoData) {
     var commentators = videoData.commentators;
     var matchInfo = videoData.matchInfo;
 
-    console.log('▶️ Playing video:', title);
+    console.log('========================================');
+    console.log('▶️ PLAY VIDEO CALLED');
+    console.log('Title:', title);
     console.log('Video URL:', videoUrl);
+    console.log('Type:', type);
+    console.log('========================================');
 
     if (!videoUrl) {
-        console.error('No video URL provided');
+        console.error('❌ ERROR: No video URL provided');
+        alert('Không có URL video!');
         return;
     }
 
@@ -27,9 +32,13 @@ function playVideo(videoData) {
     var videoCommentatorsDiv = document.getElementById('video-commentators');
 
     if (!videoPlayer || !videoTitle) {
-        console.error('Video player elements not found');
+        console.error('❌ ERROR: Video player elements not found');
+        console.log('videoPlayer:', videoPlayer);
+        console.log('videoTitle:', videoTitle);
         return;
     }
+
+    console.log('✅ Video player elements found');
 
     videoTitle.textContent = title;
 
@@ -56,9 +65,15 @@ function playVideo(videoData) {
 
     // Clean up previous HLS instance
     if (hlsPlayer) {
+        console.log('🧹 Cleaning up previous HLS instance');
         hlsPlayer.destroy();
         hlsPlayer = null;
     }
+
+    // Stop and clear video player
+    videoPlayer.pause();
+    videoPlayer.src = '';
+    videoPlayer.load();
 
     showScreen(SCREEN_IDS.PLAYER);
 
@@ -68,64 +83,148 @@ function playVideo(videoData) {
     // Show video info initially
     showVideoInfo();
 
+    // Add video element event listeners for debugging
+    videoPlayer.addEventListener('loadstart', function() {
+        console.log('📺 Video: loadstart event');
+    });
+    videoPlayer.addEventListener('loadedmetadata', function() {
+        console.log('📺 Video: loadedmetadata event');
+        console.log('Video duration:', videoPlayer.duration);
+        console.log('Video readyState:', videoPlayer.readyState);
+    });
+    videoPlayer.addEventListener('canplay', function() {
+        console.log('📺 Video: canplay event');
+    });
+    videoPlayer.addEventListener('playing', function() {
+        console.log('✅ Video: playing event - VIDEO IS PLAYING!');
+    });
+    videoPlayer.addEventListener('waiting', function() {
+        console.log('⏳ Video: waiting event - buffering');
+    });
+    videoPlayer.addEventListener('error', function(e) {
+        console.error('❌ Video element error:', e);
+        if (videoPlayer.error) {
+            console.error('Error code:', videoPlayer.error.code);
+            console.error('Error message:', videoPlayer.error.message);
+        }
+    });
+
     // Check if HLS stream
     if (type === 'hls' || videoUrl.includes('.m3u8')) {
-        // Use HLS.js for HLS streams
-        if (typeof Hls !== 'undefined' && Hls.isSupported()) {
-            hlsPlayer = new Hls({
-                enableWorker: true,
-                lowLatencyMode: true,
-                backBufferLength: 90
-            });
-            hlsPlayer.loadSource(videoUrl);
-            hlsPlayer.attachMedia(videoPlayer);
+        console.log('🎥 Detected HLS stream (.m3u8)');
 
-            hlsPlayer.on(Hls.Events.MANIFEST_PARSED, function() {
-                videoPlayer.play().catch(function(error) {
-                    console.error('Error playing video:', error);
+        // Check for HLS.js availability
+        console.log('Checking HLS.js availability...');
+        console.log('typeof Hls:', typeof Hls);
+
+        if (typeof Hls !== 'undefined') {
+            console.log('✅ HLS.js is loaded');
+            console.log('HLS.isSupported():', Hls.isSupported());
+
+            if (Hls.isSupported()) {
+                console.log('🚀 Using HLS.js for playback');
+
+                hlsPlayer = new Hls({
+                    debug: true, // Enable debug logging
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backBufferLength: 90
                 });
-            });
 
-            // Error handling with recovery
-            hlsPlayer.on(Hls.Events.ERROR, function(event, data) {
-                console.error('HLS Error:', data);
-                if (data.fatal) {
-                    switch(data.type) {
-                        case Hls.ErrorTypes.NETWORK_ERROR:
-                            console.log('Network error, trying to recover...');
-                            hlsPlayer.startLoad();
-                            break;
-                        case Hls.ErrorTypes.MEDIA_ERROR:
-                            console.log('Media error, trying to recover...');
-                            hlsPlayer.recoverMediaError();
-                            break;
-                        default:
-                            console.error('Fatal error, cannot recover');
-                            hlsPlayer.destroy();
-                            hlsPlayer = null;
-                            break;
+                console.log('Loading source:', videoUrl);
+                hlsPlayer.loadSource(videoUrl);
+
+                console.log('Attaching to media element');
+                hlsPlayer.attachMedia(videoPlayer);
+
+                hlsPlayer.on(Hls.Events.MANIFEST_PARSED, function() {
+                    console.log('✅ HLS: MANIFEST_PARSED - Starting playback');
+                    videoPlayer.play().then(function() {
+                        console.log('✅ Video play() promise resolved');
+                    }).catch(function(error) {
+                        console.error('❌ Video play() error:', error);
+                        console.error('Error name:', error.name);
+                        console.error('Error message:', error.message);
+                    });
+                });
+
+                // Error handling with recovery
+                hlsPlayer.on(Hls.Events.ERROR, function(event, data) {
+                    console.error('❌ HLS Error Event:', event);
+                    console.error('Error data:', data);
+                    console.error('Error type:', data.type);
+                    console.error('Error details:', data.details);
+                    console.error('Fatal:', data.fatal);
+
+                    if (data.fatal) {
+                        switch(data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                console.log('🔄 Network error, trying to recover...');
+                                hlsPlayer.startLoad();
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                console.log('🔄 Media error, trying to recover...');
+                                hlsPlayer.recoverMediaError();
+                                break;
+                            default:
+                                console.error('💀 Fatal error, cannot recover');
+                                hlsPlayer.destroy();
+                                hlsPlayer = null;
+                                alert('Không thể phát video. Lỗi: ' + data.details);
+                                break;
+                        }
                     }
-                }
-            });
-        }
-        // Native HLS support (Safari, webOS)
-        else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
-            videoPlayer.src = videoUrl;
-            videoPlayer.addEventListener('loadedmetadata', function() {
-                videoPlayer.play().catch(function(error) {
-                    console.error('Error playing video:', error);
                 });
-            });
+            } else {
+                console.log('⚠️ HLS.js not supported, trying native HLS');
+                tryNativeHLS(videoPlayer, videoUrl);
+            }
         } else {
-            console.error('HLS is not supported in this browser');
-            alert('Trình duyệt không hỗ trợ phát video HLS');
+            console.log('⚠️ HLS.js not loaded, trying native HLS');
+            tryNativeHLS(videoPlayer, videoUrl);
         }
     } else {
-        // Regular video (MP4, FLV, etc.)
+        console.log('🎥 Regular video (not HLS)');
         videoPlayer.src = videoUrl;
-        videoPlayer.play().catch(function(error) {
-            console.error('Error playing video:', error);
+        videoPlayer.play().then(function() {
+            console.log('✅ Video play() promise resolved');
+        }).catch(function(error) {
+            console.error('❌ Video play() error:', error);
         });
+    }
+}
+
+// Try native HLS playback (for Safari, webOS)
+function tryNativeHLS(videoPlayer, videoUrl) {
+    console.log('🍎 Trying native HLS playback');
+    console.log('Checking canPlayType for application/vnd.apple.mpegurl');
+
+    var canPlayHLS = videoPlayer.canPlayType('application/vnd.apple.mpegurl');
+    console.log('canPlayType result:', canPlayHLS);
+
+    if (canPlayHLS) {
+        console.log('✅ Native HLS is supported');
+        videoPlayer.src = videoUrl;
+        console.log('Set video source to:', videoUrl);
+
+        videoPlayer.load();
+        console.log('Called video.load()');
+
+        // Try to play after a short delay
+        setTimeout(function() {
+            console.log('Attempting to play video...');
+            videoPlayer.play().then(function() {
+                console.log('✅ Native HLS playback started successfully');
+            }).catch(function(error) {
+                console.error('❌ Native HLS play() error:', error);
+                console.error('Error name:', error.name);
+                console.error('Error message:', error.message);
+                alert('Không thể phát video. Vui lòng thử lại!');
+            });
+        }, 500);
+    } else {
+        console.error('❌ Native HLS is NOT supported');
+        alert('Trình duyệt không hỗ trợ phát video HLS');
     }
 }
 
@@ -215,6 +314,24 @@ function stopVideo() {
     }
 
     console.log('Video stopped and cleaned up');
+}
+
+// Initialize video player on load
+function initVideoPlayer() {
+    console.log('🎬 Initializing video player...');
+
+    var videoPlayer = document.getElementById('video-player');
+    if (!videoPlayer) {
+        console.error('❌ Video player element not found!');
+        return;
+    }
+
+    console.log('✅ Video player element found');
+    console.log('Video element properties:');
+    console.log('  - readyState:', videoPlayer.readyState);
+    console.log('  - networkState:', videoPlayer.networkState);
+    console.log('  - controls:', videoPlayer.controls);
+    console.log('  - autoplay:', videoPlayer.autoplay);
 }
 
 console.log('✅ Video Player loaded');

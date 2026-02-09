@@ -1,0 +1,68 @@
+═══════════════════════════════════════════════════════════
+           CÀI ĐẶT ỨNG DỤNG LÊN TV LG - HƯỚNG DẪN NHANH
+═══════════════════════════════════════════════════════════
+
+📺 BƯỚC 1: BẬT DEVELOPER MODE TRÊN TV
+  1. Mở LG Content Store trên TV
+  2. Tìm và cài "Developer Mode"
+  3. Mở app Developer Mode
+  4. Bật ON
+  5. Ghi lại IP của TV (vd: 192.168.1.5)
+
+💻 BƯỚC 2: CÀI CÔNG CỤ (chỉ lần đầu)
+  1. Cài Node.js v20: https://nodejs.org
+  2. Mở Terminal/CMD, gõ:
+     npm install -g @webos-tools/cli
+
+🚀 BƯỚC 3: CHẠY SCRIPT
+
+  Mac/Linux:
+    ./install.sh
+
+  Windows:
+    install.bat
+
+❓ Script sẽ hỏi:
+  • IP của TV → Nhập IP (vd: 192.168.1.5)
+  • Port → Nhấn Enter (dùng mặc định)
+  • Tên TV → Nhấn Enter (dùng mặc định)
+  • ⚠️  Nhấn OK trên TV khi có thông báo xác nhận!
+  • Mở app ngay? → Nhập y
+
+✅ XONG! App đã cài trên TV
+
+═══════════════════════════════════════════════════════════
+
+❌ KHẮC PHỤC LỖI:
+
+Lỗi: "isDate is not a function"
+  → Node.js phải v18-v20, không dùng v21+
+
+  Cách fix (Mac):
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+    nvm install 20
+    nvm use 20
+    npm install -g @webos-tools/cli
+
+Lỗi: "Cannot connect to TV"
+  → TV và máy tính phải cùng WiFi
+  → Kiểm tra IP address của TV
+  → Đảm bảo Developer Mode đã bật
+
+Lỗi: "Passphrase required"
+  → Nhấn Accept/OK trên TV
+
+═══════════════════════════════════════════════════════════
+
+💡 CÁC LỆNH HỮU ÍCH (sau khi cài):
+
+Chạy lại app:
+  ares-launch --device myTV com.smarttv.sports
+
+Xem log debug:
+  ares-inspect --device myTV com.smarttv.sports
+
+Gỡ app:
+  ares-install --device myTV --remove com.smarttv.sports
+
+═══════════════════════════════════════════════════════════
