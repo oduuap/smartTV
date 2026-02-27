@@ -631,14 +631,56 @@ h1 {
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
 }
 
-/* Back Button - Hidden (removed from UI) */
+/* Back Button - Visible (LG Required) */
 .back-button {
-    display: none !important;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 12px 25px;
+    border: 3px solid rgba(255, 255, 255, 0.7);
+    border-radius: 10px;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
-/* Back Button on Player Screen - Hidden */
+.back-button:hover,
+.back-button.focused {
+    background: rgba(0, 212, 255, 0.9);
+    border-color: #00d4ff;
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(0, 212, 255, 0.8);
+}
+
+/* Back Button on Player Screen - Visible */
 .back-button-player {
-    display: none !important;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 15px 30px;
+    border: 3px solid rgba(255, 255, 255, 0.7);
+    border-radius: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.back-button-player:hover,
+.back-button-player.focused {
+    background: rgba(0, 212, 255, 0.9);
+    border-color: #00d4ff;
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(0, 212, 255, 0.8);
 }
 
 /* Scrollbar - Hidden */

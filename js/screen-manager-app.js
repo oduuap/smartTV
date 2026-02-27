@@ -42,6 +42,11 @@ function showScreen(screenId) {
             updateFocusableElements();
             setFocus(0);
 
+            // Save app state after screen transition
+            if (typeof saveAppState === 'function') {
+                saveAppState();
+            }
+
             console.log('✅ Successfully switched to screen: ' + screenId);
         } else {
             console.error('❌ Screen not found: ' + screenId);

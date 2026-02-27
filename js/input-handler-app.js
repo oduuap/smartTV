@@ -120,6 +120,7 @@ function handleKeyPress(event) {
             // Return false to prevent any further handling
             return false;
         case KEY_CODES.PLAY: // Play button
+        case KEY_CODES.PAUSE: // Pause button
             var videoPlayer = document.getElementById('video-player');
             if (currentScreen === SCREEN_IDS.PLAYER && videoPlayer) {
                 if (videoPlayer.paused) {
@@ -130,7 +131,163 @@ function handleKeyPress(event) {
             }
             event.preventDefault();
             break;
+        case KEY_CODES.STOP: // Stop button
+            console.log('STOP key pressed');
+            if (currentScreen === SCREEN_IDS.PLAYER) {
+                stopVideo();
+                showScreen(SCREEN_IDS.SPORTS);
+            }
+            event.preventDefault();
+            break;
+        case KEY_CODES.FAST_FORWARD: // Fast Forward (skip 10 seconds)
+            var videoPlayer = document.getElementById('video-player');
+            if (currentScreen === SCREEN_IDS.PLAYER && videoPlayer) {
+                videoPlayer.currentTime = Math.min(videoPlayer.currentTime + 10, videoPlayer.duration || videoPlayer.currentTime + 10);
+                console.log('Fast forward: +10s, current time:', videoPlayer.currentTime);
+            }
+            event.preventDefault();
+            break;
+        case KEY_CODES.REWIND: // Rewind (back 10 seconds)
+            var videoPlayer = document.getElementById('video-player');
+            if (currentScreen === SCREEN_IDS.PLAYER && videoPlayer) {
+                videoPlayer.currentTime = Math.max(videoPlayer.currentTime - 10, 0);
+                console.log('Rewind: -10s, current time:', videoPlayer.currentTime);
+            }
+            event.preventDefault();
+            break;
+        case KEY_CODES.HOME_WEBOS: // HOME key - Return to Launcher Bar
+            console.log('HOME key pressed - Returning to Launcher Bar');
+            event.preventDefault();
+            event.stopPropagation();
+
+            // Clean up video if playing
+            if (currentScreen === SCREEN_IDS.PLAYER) {
+                stopVideo();
+            }
+
+            // On webOS, minimize app to show Launcher Bar
+            if (typeof window.webOSSystem !== 'undefined') {
+                try {
+                    console.log('Attempting to activate Launcher Bar via webOS API');
+                    // Use webOS API to minimize app
+                    if (window.webOSSystem.activate) {
+                        window.webOSSystem.activate();
+                    }
+                    // Alternative: use PalmServiceBridge
+                    if (window.PalmServiceBridge) {
+                        var bridge = new window.PalmServiceBridge();
+                        bridge.call('palm://com.webos.service.applicationmanager/launch',
+                            '{"id":"com.webos.app.home"}');
+                    }
+                } catch (e) {
+                    console.error('Cannot activate Launcher Bar:', e);
+                }
+            } else {
+                console.log('Not on webOS - HOME key simulation (go to menu)');
+                // For testing on browser
+                showScreen(SCREEN_IDS.MENU);
+            }
+            return false;
+        case KEY_CODES.EXIT_WEBOS: // EXIT key - Return to Live TV
+            console.log('EXIT key pressed - Returning to Live TV');
+            event.preventDefault();
+            event.stopPropagation();
+
+            // Clean up video if playing
+            if (currentScreen === SCREEN_IDS.PLAYER) {
+                stopVideo();
+            }
+
+            // On webOS, switch to Live TV
+            if (typeof window.webOSSystem !== 'undefined') {
+                try {
+                    console.log('Attempting to launch Live TV via webOS API');
+                    // Use webOS API to launch Live TV
+                    if (window.PalmServiceBridge) {
+                        var bridge = new window.PalmServiceBridge();
+                        bridge.call('palm://com.webos.service.applicationmanager/launch',
+                            '{"id":"com.webos.app.livetv"}');
+                    } else if (window.webOSSystem.close) {
+                        // Alternative: close app (will return to previous app or TV)
+                        window.webOSSystem.close();
+                    }
+                } catch (e) {
+                    console.error('Cannot activate Live TV:', e);
+                }
+            } else {
+                console.log('Not on webOS - EXIT key simulation (close window)');
+                // For testing on browser - close or go to menu
+                if (window.close) {
+                    window.close();
+                } else {
+                    showScreen(SCREEN_IDS.MENU);
+                }
+            }
+            return false;
     }
+}
+
+// Initialize Magic Remote pointer support
+function initMagicRemote() {
+    console.log('🖱️  Initializing Magic Remote pointer support...');
+
+    var lastPointerTarget = null;
+    var pointerMoveTimeout = null;
+
+    // Track pointer movement (Magic Remote)
+    document.addEventListener('mousemove', function(e) {
+        // Throttle pointer movement to prevent excessive updates
+        if (pointerMoveTimeout) {
+            return;
+        }
+
+        pointerMoveTimeout = setTimeout(function() {
+            pointerMoveTimeout = null;
+        }, 50); // 50ms throttle
+
+        // Get element under pointer
+        var target = document.elementFromPoint(e.clientX, e.clientY);
+        if (!target) return;
+
+        // Find closest focusable element
+        var focusable = target.classList.contains('focusable') ? target : target.closest('.focusable');
+
+        // Update focus if pointer moved to new focusable element
+        if (focusable && focusable !== lastPointerTarget) {
+            var index = focusableElements.indexOf(focusable);
+            if (index >= 0) {
+                setFocus(index);
+                lastPointerTarget = focusable;
+                console.log('🖱️  Pointer focus changed to index:', index);
+            }
+        }
+    });
+
+    // Handle pointer clicks (Magic Remote OK button via pointer)
+    document.addEventListener('click', function(e) {
+        var target = e.target.closest('.focusable');
+        if (target) {
+            console.log('🖱️  Pointer click on focusable element');
+            // Click event will bubble up naturally
+        }
+    });
+
+    // Show cursor for Magic Remote
+    document.body.style.cursor = 'auto';
+
+    // Add hover effects via CSS
+    var style = document.createElement('style');
+    style.textContent = '\
+        .focusable:hover {\
+            cursor: pointer;\
+        }\
+        body {\
+            cursor: auto !important;\
+        }\
+    ';
+    document.head.appendChild(style);
+
+    console.log('✅ Magic Remote pointer support initialized');
 }
 
 // Initialize input handlers
@@ -139,6 +296,9 @@ function initInputHandlers() {
 
     // Setup keyboard navigation
     document.addEventListener('keydown', handleKeyPress);
+
+    // Setup Magic Remote pointer support
+    initMagicRemote();
 
     console.log('✅ Input handlers initialized');
     console.log('📋 Focusable elements:', focusableElements.length);

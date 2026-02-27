@@ -5,6 +5,7 @@
 // HLS player instance (global)
 var hlsPlayer = null;
 var videoHideTimeout = null;
+var videoPositionSaveInterval = null;
 
 // Play video function
 function playVideo(videoData) {
@@ -97,6 +98,25 @@ function playVideo(videoData) {
     });
     videoPlayer.addEventListener('playing', function() {
         console.log('✅ Video: playing event - VIDEO IS PLAYING!');
+
+        // Start tracking video position
+        startVideoPositionTracking();
+    });
+    videoPlayer.addEventListener('pause', function() {
+        console.log('⏸️  Video: pause event');
+
+        // Save position when paused
+        if (typeof saveVideoPosition === 'function' && currentMatchId) {
+            saveVideoPosition(currentMatchId, videoPlayer.currentTime, videoPlayer.duration);
+        }
+    });
+    videoPlayer.addEventListener('ended', function() {
+        console.log('🏁 Video: ended event');
+
+        // Clear saved position when video ends
+        if (typeof clearVideoPosition === 'function' && currentMatchId) {
+            clearVideoPosition(currentMatchId);
+        }
     });
     videoPlayer.addEventListener('waiting', function() {
         console.log('⏳ Video: waiting event - buffering');
@@ -282,10 +302,47 @@ function showVideoInfo() {
     }
 }
 
+// Start tracking video position
+function startVideoPositionTracking() {
+    // Clear existing interval
+    if (videoPositionSaveInterval) {
+        clearInterval(videoPositionSaveInterval);
+    }
+
+    // Save position every 5 seconds
+    videoPositionSaveInterval = setInterval(function() {
+        var videoPlayer = document.getElementById('video-player');
+        if (videoPlayer && !videoPlayer.paused && currentMatchId) {
+            if (typeof saveVideoPosition === 'function') {
+                saveVideoPosition(currentMatchId, videoPlayer.currentTime, videoPlayer.duration);
+            }
+        }
+    }, 5000); // Every 5 seconds
+
+    console.log('📍 Video position tracking started');
+}
+
+// Stop tracking video position
+function stopVideoPositionTracking() {
+    if (videoPositionSaveInterval) {
+        clearInterval(videoPositionSaveInterval);
+        videoPositionSaveInterval = null;
+        console.log('📍 Video position tracking stopped');
+    }
+}
+
 // Stop video and cleanup
 function stopVideo() {
     var videoPlayer = document.getElementById('video-player');
     var playerContainer = document.querySelector('.player-container');
+
+    // Save final position before stopping
+    if (videoPlayer && currentMatchId && typeof saveVideoPosition === 'function') {
+        saveVideoPosition(currentMatchId, videoPlayer.currentTime, videoPlayer.duration);
+    }
+
+    // Stop position tracking
+    stopVideoPositionTracking();
 
     if (videoPlayer) {
         videoPlayer.pause();
@@ -312,6 +369,9 @@ function stopVideo() {
         hlsPlayer.destroy();
         hlsPlayer = null;
     }
+
+    // Clear current match ID
+    currentMatchId = null;
 
     console.log('Video stopped and cleaned up');
 }
