@@ -52,17 +52,40 @@ function moveFocus(direction) {
     // For menu screen and sports screen, use grid navigation
     if (currentScreen === SCREEN_IDS.MENU || currentScreen === SCREEN_IDS.SPORTS) {
         var columns = currentScreen === SCREEN_IDS.MENU ? GRID_CONFIG.MENU_COLUMNS : GRID_CONFIG.SPORTS_COLUMNS;
+        var totalItems = focusableElements.length;
+        var currentRow = Math.floor(focusedIndex / columns);
+        var currentCol = focusedIndex % columns;
+        var totalRows = Math.ceil(totalItems / columns);
 
         if (direction === 'left') {
-            newIndex = Math.max(0, focusedIndex - 1);
+            // Move left within row, stop at left edge
+            if (currentCol > 0) {
+                newIndex = focusedIndex - 1;
+            }
         } else if (direction === 'right') {
-            newIndex = Math.min(focusableElements.length - 1, focusedIndex + 1);
+            // Move right within row, stop at right edge or last item
+            if (currentCol < columns - 1 && focusedIndex < totalItems - 1) {
+                newIndex = focusedIndex + 1;
+            }
         } else if (direction === 'up') {
             // Move up 1 row
-            newIndex = Math.max(0, focusedIndex - columns);
+            var targetIndex = focusedIndex - columns;
+            if (targetIndex >= 0) {
+                newIndex = targetIndex;
+            }
         } else if (direction === 'down') {
-            // Move down 1 row
-            newIndex = Math.min(focusableElements.length - 1, focusedIndex + columns);
+            // Move down 1 row with smart column handling
+            var targetIndex = focusedIndex + columns;
+            if (targetIndex < totalItems) {
+                // Target exists, move there
+                newIndex = targetIndex;
+            } else if (currentRow < totalRows - 1) {
+                // Last row: move to last item if we're beyond it
+                var lastRowStart = (totalRows - 1) * columns;
+                var lastRowItems = totalItems - lastRowStart;
+                var targetCol = Math.min(currentCol, lastRowItems - 1);
+                newIndex = lastRowStart + targetCol;
+            }
         }
     } else {
         // For other screens, use up/down navigation

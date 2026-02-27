@@ -102,11 +102,13 @@ function renderMatchList(matches, container, onClickCallback) {
     // Force Flexbox for LG TV 2020 (Grid not supported)
     container.style.display = 'flex';
     container.style.flexWrap = 'wrap';
-    container.style.justifyContent = 'flex-start';
+    container.style.justifyContent = 'center';
     container.style.alignContent = 'flex-start';
     container.style.width = '100%';
+    container.style.gap = '20px';
+    container.style.paddingTop = '80px';
 
-    console.log('📺 Flexbox applied for LG TV 2020');
+    console.log('📺 Flexbox with 4 columns centered applied for LG TV 2020');
 
     // Show error if no matches
     if (!matches || matches.length === 0) {
@@ -123,19 +125,13 @@ function renderMatchList(matches, container, onClickCallback) {
         try {
             var matchItem = document.createElement('div');
             matchItem.className = 'match-item focusable';
-            // Flexbox: 3 items per row
+            // Flexbox: 4 items per row with gap (no margins needed)
             matchItem.style.display = 'block';
-            matchItem.style.width = 'calc(33.333% - 17px)';
-            matchItem.style.marginRight = '25px';
-            matchItem.style.marginBottom = '25px';
+            matchItem.style.width = 'calc(25% - 15px)';
             matchItem.style.minWidth = '0';
             matchItem.style.visibility = 'visible';
             matchItem.style.boxSizing = 'border-box';
-
-            // Remove right margin from every 3rd item
-            if ((index + 1) % 3 === 0) {
-                matchItem.style.marginRight = '0';
-            }
+            matchItem.style.flexShrink = '0';
 
             // Add live badge if match is live
             if (match.isLive) {
