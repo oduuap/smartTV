@@ -1,0 +1,147 @@
+════════════════════════════════════════════════════════════
+        FIX VIDEO KHÔNG CHẠY TRÊN ANDROID - PHIÊN BẢN MỚI
+════════════════════════════════════════════════════════════
+
+📱 FILE MỚI: SportsTV-Android-v1.0.1-VideoFix.apk
+
+════════════════════════════════════════════════════════════
+🔧 CÁC VẤN ĐỀ ĐÃ FIX
+════════════════════════════════════════════════════════════
+
+❌ VẤN ĐỀ CŨ:
+   - Video HLS không phát được trên Android
+   - Khi nhấn vào trận đấu, video load nhưng không chạy
+   - Màn hình đen hoặc báo lỗi
+
+✅ ĐÃ FIX:
+
+1. Thêm Network Security Configuration
+   - Cho phép HTTP traffic (cleartext traffic)
+   - Android 9+ mặc định block HTTP, giờ đã mở
+   - File: res/xml/network_security_config.xml
+
+2. Cập nhật AndroidManifest.xml
+   - Thêm: android:usesCleartextTraffic="true"
+   - Thêm: android:networkSecurityConfig="@xml/network_security_config"
+   - Đảm bảo app có thể stream video qua HTTP/HTTPS
+
+3. Cập nhật Cordova config.xml
+   - Config được giữ nguyên khi rebuild
+   - Tự động copy network security config
+
+════════════════════════════════════════════════════════════
+📲 CÁCH CÀI ĐẶT
+════════════════════════════════════════════════════════════
+
+CÁCH 1: Qua ADB (Nếu có máy tính)
+
+  Mac/Linux:
+    ./install-android.sh
+
+  Windows:
+    install-android.bat
+
+  Script sẽ tự động:
+  - Gỡ phiên bản cũ
+  - Cài phiên bản mới (v1.0.1)
+  - Mở app
+
+CÁCH 2: Cài thủ công trên điện thoại
+
+  1. Gỡ app cũ (nếu có):
+     Settings > Apps > Sports TV > Uninstall
+
+  2. Copy file APK mới vào điện thoại:
+     SportsTV-Android-v1.0.1-VideoFix.apk
+
+  3. Vào File Manager, tìm file APK
+
+  4. Nhấn vào file APK > Install
+
+  5. Chấp nhận "Install from Unknown Sources" (nếu hỏi)
+
+  6. Mở app và thử xem video
+
+════════════════════════════════════════════════════════════
+🧪 CÁCH KIỂM TRA
+════════════════════════════════════════════════════════════
+
+1. Mở app Sports TV
+
+2. Chọn menu "⚽ Bóng Đá" hoặc "🏀 Bóng Rổ"
+
+3. Chọn 1 trận đấu bất kỳ
+
+4. Video nên tự động phát
+
+✅ THÀNH CÔNG nếu:
+   - Video load và phát ngay
+   - Có hình ảnh, có âm thanh
+   - Không có màn hình đen
+   - Không có thông báo lỗi
+
+❌ VẪN LỖI nếu:
+   - Màn hình đen, không có video
+   - Báo lỗi "Cannot play video"
+   - App bị crash khi mở video
+
+════════════════════════════════════════════════════════════
+🔍 KIỂM TRA THÊM (NẾU VẪN LỖI)
+════════════════════════════════════════════════════════════
+
+Nếu video vẫn không chạy, kiểm tra:
+
+1. ✅ Kết nối Internet
+   - Đảm bảo điện thoại có Internet
+   - Thử mở Chrome/Browser để test
+
+2. ✅ Android Version
+   - App yêu cầu Android 5.0 (Lollipop) trở lên
+   - Vào Settings > About > Android Version
+
+3. ✅ Permissions
+   - Vào Settings > Apps > Sports TV > Permissions
+   - Đảm bảo có quyền "Internet" (nên tự động có)
+
+4. 🐛 Xem Log (Dành cho Developer)
+   - Kết nối điện thoại với máy tính qua USB
+   - Chạy: adb logcat | grep -i "video\|hls\|error"
+   - Xem lỗi gì trong console
+
+════════════════════════════════════════════════════════════
+📝 CHI TIẾT KỸ THUẬT
+════════════════════════════════════════════════════════════
+
+Các thay đổi trong code:
+
+1. File: SmartTVAndroid/config.xml
+   - Thêm edit-config cho usesCleartextTraffic
+   - Thêm resource-file cho network_security_config.xml
+
+2. File: SmartTVAndroid/res/xml/network_security_config.xml
+   - Allow cleartext traffic globally
+   - Trust system certificates
+   - Allow domains: api-ls.cdnokvip.com, cdnokvip.com
+
+3. File: AndroidManifest.xml (auto-generated)
+   - android:usesCleartextTraffic="true"
+   - android:networkSecurityConfig="@xml/network_security_config"
+
+════════════════════════════════════════════════════════════
+📊 SO SÁNH PHIÊN BẢN
+════════════════════════════════════════════════════════════
+
+SportsTV-Android-v1.0.0.apk (CŨ):
+  ❌ Video không chạy trên Android
+  ❌ Thiếu network security config
+  ❌ Cleartext traffic bị block
+
+SportsTV-Android-v1.0.1-VideoFix.apk (MỚI):
+  ✅ Video chạy trên Android
+  ✅ Có network security config
+  ✅ Cho phép HTTP/HTTPS traffic
+  ✅ Hỗ trợ HLS streaming
+
+════════════════════════════════════════════════════════════
+        VUI LÒNG THỬ PHIÊN BẢN MỚI VÀ BÁO CÁO KẾT QUẢ! 🚀
+════════════════════════════════════════════════════════════

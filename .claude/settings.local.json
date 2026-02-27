@@ -9,7 +9,14 @@
       "Bash(/opt/homebrew/bin/ares-package:*)",
       "Bash(export PATH=\"/opt/homebrew/opt/node@20/bin:$PATH\")",
       "Bash(git checkout:*)",
-      "Bash(du:*)"
+      "Bash(du:*)",
+      "Bash(cat:*)",
+      "Bash(cordova platform:*)",
+      "Bash(cordova build:*)",
+      "Bash(chmod:*)",
+      "Bash(cd:*)",
+      "Bash(curl:*)",
+      "Bash(./gradlew assembleDebug:*)"
     ]
   }
 }

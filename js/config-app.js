@@ -29,7 +29,17 @@ var KEY_CODES = {
     BACK_WEBOS: 461,
     BACKSPACE: 8,
     ESCAPE: 27,
-    PLAY: 415
+    PLAY: 415,
+    PAUSE: 19,
+    STOP: 413,
+    FAST_FORWARD: 417,
+    REWIND: 412,
+    HOME_WEBOS: 10252,  // LG webOS HOME key - Return to Launcher
+    EXIT_WEBOS: 10182,  // LG webOS EXIT key - Return to Live TV
+    RED: 403,           // Color buttons (optional)
+    GREEN: 404,
+    YELLOW: 405,
+    BLUE: 406
 };
 
 // Grid Configuration

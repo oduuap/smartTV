@@ -1,0 +1,145 @@
+════════════════════════════════════════════════════════════
+      CÀI ĐẶT SPORTSTV LÊN ANDROID TV/BOX - HƯỚNG DẪN
+════════════════════════════════════════════════════════════
+
+📦 CÓ 3 CÁCH CÀI ĐẶT:
+
+════════════════════════════════════════════════════════════
+CÁCH 1: CÀI QUA ADB (KHUYẾN NGHỊ - DÙNG SCRIPT)
+════════════════════════════════════════════════════════════
+
+✅ Ưu điểm: Nhanh, tự động, cài từ xa qua WiFi
+
+📋 BƯỚC 1: Cài ADB trên máy tính
+
+  Mac:
+    brew install android-platform-tools
+
+  Windows:
+    Download: https://developer.android.com/tools/releases/platform-tools
+    Giải nén và thêm vào PATH
+
+  Linux:
+    sudo apt install adb
+
+📋 BƯỚC 2: Bật USB Debugging trên Android TV
+
+  1. Vào Settings > About
+  2. Nhấn 7 lần vào "Build Number" → Bật Developer Mode
+  3. Quay lại Settings > Developer Options
+  4. Bật "USB Debugging"
+  5. Bật "Install via USB" (hoặc "ADB over Network")
+  6. Ghi lại IP của TV (Settings > Network)
+
+📋 BƯỚC 3: Chạy script cài đặt
+
+  Mac/Linux:
+    ./install-android.sh
+
+  Windows:
+    install-android.bat
+
+  Script sẽ:
+  - Tự động tìm file APK
+  - Kết nối với TV qua WiFi
+  - Gỡ app cũ (nếu có)
+  - Cài đặt app mới
+  - Mở app (nếu chọn)
+
+════════════════════════════════════════════════════════════
+CÁCH 2: CÀI QUA USB (THỦ CÔNG)
+════════════════════════════════════════════════════════════
+
+📋 BƯỚC 1: Copy APK vào USB
+
+  - Copy file "SportsTV-Android-v1.0.0.apk" vào USB
+  - Cắm USB vào Android TV
+
+📋 BƯỚC 2: Cài đặt
+
+  1. Mở File Manager trên TV
+  2. Chọn USB Storage
+  3. Tìm file APK
+  4. Nhấn vào file → Chọn Install
+  5. Chấp nhận cài đặt từ Unknown Sources (nếu hỏi)
+
+════════════════════════════════════════════════════════════
+CÁCH 3: TẢI QUA LINK (CẦN HOST FILE)
+════════════════════════════════════════════════════════════
+
+📋 Option A: Dùng Google Drive
+
+  1. Upload APK lên Google Drive
+  2. Chia sẻ link (Anyone with the link)
+  3. Trên TV:
+     - Mở Chrome/Browser
+     - Vào link Drive
+     - Download APK
+     - Cài đặt từ Downloads
+
+📋 Option B: Dùng Dropbox
+
+  1. Upload APK lên Dropbox
+  2. Get link và thêm "?dl=1" vào cuối URL
+  3. Share link với người dùng
+  4. Họ download và cài
+
+📋 Option C: Self-host (cho developer)
+
+  1. Upload APK lên server của bạn
+  2. Share direct link: http://your-server.com/SportsTV.apk
+  3. Người dùng download qua browser trên TV
+
+════════════════════════════════════════════════════════════
+❌ KHẮC PHỤC SỰ CỐ
+════════════════════════════════════════════════════════════
+
+🔴 "Unknown Sources blocked"
+   → Settings > Security > Cho phép "Unknown Sources"
+
+🔴 "App not installed"
+   → Gỡ app cũ trước: Settings > Apps > Uninstall
+   → Cài lại
+
+🔴 "ADB connection failed"
+   → TV và máy tính cùng WiFi
+   → ADB Debugging đã bật
+   → Accept kết nối trên TV
+
+🔴 "Parse error"
+   → File APK bị lỗi/hỏng
+   → Download lại file mới
+
+════════════════════════════════════════════════════════════
+💡 LỆNH ADB HỮU ÍCH
+════════════════════════════════════════════════════════════
+
+Kết nối TV:
+  adb connect 192.168.1.xxx:5555
+
+Cài APK:
+  adb install SportsTV-Android-v1.0.0.apk
+
+Mở app:
+  adb shell monkey -p com.smarttv.sports -c android.intent.category.LAUNCHER 1
+
+Gỡ app:
+  adb uninstall com.smarttv.sports
+
+Xem log:
+  adb logcat | grep SportsTV
+
+Ngắt kết nối:
+  adb disconnect
+
+════════════════════════════════════════════════════════════
+📱 YÊU CẦU HỆ THỐNG
+════════════════════════════════════════════════════════════
+
+✅ Android 5.0 (Lollipop) trở lên
+✅ Khoảng 10MB dung lượng trống
+✅ Kết nối Internet (để xem stream)
+
+════════════════════════════════════════════════════════════
+        CHÚC BẠN CÀI ĐẶT THÀNH CÔNG! 🎉
+════════════════════════════════════════════════════════════

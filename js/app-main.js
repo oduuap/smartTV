@@ -51,15 +51,31 @@ document.addEventListener('DOMContentLoaded', function() {
     initInputHandlers();
     initVideoPlayer();
 
+    // Initialize state manager (must be before restore)
+    if (typeof initStateManager === 'function') {
+        initStateManager();
+    }
+
     // Setup menu event listeners
     setupMenuListeners();
 
-    // Show loading screen for 2 seconds then go to menu
+    // Show loading screen then try to restore state or go to menu
     console.log('⏳ Starting loading timer...');
     setTimeout(function() {
-        console.log('🔄 Timer finished, switching to menu...');
-        showScreen(SCREEN_IDS.MENU);
-        window.history.pushState({ screen: SCREEN_IDS.MENU }, '', '');
+        console.log('🔄 Timer finished...');
+
+        // Try to restore previous state
+        var stateRestored = false;
+        if (typeof restoreAppState === 'function') {
+            stateRestored = restoreAppState();
+        }
+
+        // If no state restored, go to menu
+        if (!stateRestored) {
+            console.log('📋 No state to restore, going to menu...');
+            showScreen(SCREEN_IDS.MENU);
+            window.history.pushState({ screen: SCREEN_IDS.MENU }, '', '');
+        }
     }, APP_CONFIG.LOADING_SCREEN_DURATION);
 });
 
@@ -141,6 +157,9 @@ async function playMatchById(matchId) {
     console.log('========================================');
 
     try {
+        // Set current match ID for state tracking
+        currentMatchId = matchId;
+
         // Load match detail and video URL
         console.log('📡 Calling loadMatchDetail API...');
         var result = await loadMatchDetail(matchId);
@@ -153,6 +172,7 @@ async function playMatchById(matchId) {
             console.error('❌ No video link found from APIs');
             console.error('Result:', JSON.stringify(result, null, 2));
             alert('Không tìm thấy link video cho trận đấu này!\n\nVui lòng thử trận khác hoặc kiểm tra kết nối mạng.');
+            currentMatchId = null;
             return;
         }
 
@@ -166,6 +186,12 @@ async function playMatchById(matchId) {
         console.log('🎯 Preparing video data...');
         console.log('Title:', title);
         console.log('Video URL:', result.videoUrl);
+
+        // Check if there's a saved position for this video
+        var savedPosition = null;
+        if (typeof getSavedVideoPosition === 'function') {
+            savedPosition = getSavedVideoPosition(matchId);
+        }
 
         // Play video
         playVideo({
@@ -182,6 +208,33 @@ async function playMatchById(matchId) {
                 commentatorAvatar: matchData.avatar || (match ? match.commentatorAvatar : null)
             } : null
         });
+
+        // Resume from saved position if available
+        if (savedPosition && savedPosition > 0) {
+            console.log('⏩ Found saved position:', savedPosition, 'seconds');
+            console.log('⏩ Will resume playback in 3 seconds...');
+
+            setTimeout(function() {
+                var videoPlayer = document.getElementById('video-player');
+                if (videoPlayer) {
+                    videoPlayer.currentTime = savedPosition;
+                    console.log('✅ Resumed playback from:', savedPosition, 'seconds');
+
+                    // Show notification
+                    var videoInfo = document.querySelector('.video-info');
+                    if (videoInfo) {
+                        var resumeMsg = document.createElement('div');
+                        resumeMsg.style.cssText = 'background: rgba(0,212,255,0.9); padding: 10px 20px; border-radius: 5px; margin-top: 10px; font-size: 20px;';
+                        resumeMsg.textContent = '⏩ Tiếp tục từ ' + Math.floor(savedPosition / 60) + ':' + (Math.floor(savedPosition % 60)).toString().padStart(2, '0');
+                        videoInfo.appendChild(resumeMsg);
+
+                        setTimeout(function() {
+                            resumeMsg.remove();
+                        }, 3000);
+                    }
+                }
+            }, 3000); // Wait for video to load
+        }
     } catch (error) {
         console.error('========================================');
         console.error('❌ CRITICAL ERROR in playMatchById');
@@ -190,6 +243,7 @@ async function playMatchById(matchId) {
         console.error('Error stack:', error.stack);
         console.error('========================================');
         alert('Không thể tải video. Vui lòng thử lại!\n\nLỗi: ' + error.message);
+        currentMatchId = null;
     }
 }
 
