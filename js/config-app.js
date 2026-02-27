@@ -45,7 +45,7 @@ var KEY_CODES = {
 // Grid Configuration
 var GRID_CONFIG = {
     MENU_COLUMNS: 4,
-    SPORTS_COLUMNS: 3
+    SPORTS_COLUMNS: 4
 };
 
 console.log('✅ Config loaded');
