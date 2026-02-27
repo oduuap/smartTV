@@ -66,6 +66,9 @@ function showExitConfirmDialog() {
         return;
     }
 
+    // Set flag
+    isExitDialogOpen = true;
+
     // Show dialog
     dialog.style.display = 'flex';
 
@@ -78,6 +81,7 @@ function showExitConfirmDialog() {
         var index = focusableElements.indexOf(noButton);
         if (index >= 0) {
             setFocus(index);
+            console.log('Focused on NO button at index:', index);
         }
     }
 
@@ -99,11 +103,16 @@ function showExitConfirmDialog() {
             hideExitConfirmDialog();
         };
     }
+
+    console.log('✅ Exit dialog shown, flag set to:', isExitDialogOpen);
 }
 
 // Hide exit confirmation dialog
 function hideExitConfirmDialog() {
     console.log('📋 Hiding exit confirmation dialog');
+
+    // Clear flag
+    isExitDialogOpen = false;
 
     var dialog = document.getElementById('exit-confirm-dialog');
     if (dialog) {
@@ -113,6 +122,8 @@ function hideExitConfirmDialog() {
     // Restore focus to menu screen
     updateFocusableElements();
     setFocus(0);
+
+    console.log('✅ Exit dialog hidden, flag set to:', isExitDialogOpen);
 }
 
 // Exit the app
@@ -134,25 +145,31 @@ function exitApp() {
     }
 }
 
+// Global flag to track dialog state
+var isExitDialogOpen = false;
+
 // Handle back button navigation
 function handleBackButton() {
-    console.log('Back button pressed, current screen:', currentScreen);
+    console.log('Back button pressed, current screen:', currentScreen, 'dialog open:', isExitDialogOpen);
 
     // Check if exit dialog is open
-    var dialog = document.getElementById('exit-confirm-dialog');
-    if (dialog && dialog.style.display !== 'none') {
+    if (isExitDialogOpen) {
         // If dialog is open, BACK = cancel (same as clicking "No")
+        console.log('Dialog is open, cancelling exit');
         hideExitConfirmDialog();
         return;
     }
 
     if (currentScreen === SCREEN_IDS.PLAYER) {
+        console.log('Player screen - going back to sports');
         stopVideo();
         showScreen(SCREEN_IDS.SPORTS);
     } else if (currentScreen === SCREEN_IDS.SPORTS) {
+        console.log('Sports screen - going back to menu');
         showScreen(SCREEN_IDS.MENU);
     } else if (currentScreen === SCREEN_IDS.MENU) {
         // At main menu, show confirmation dialog
+        console.log('Menu screen - showing exit confirmation');
         showExitConfirmDialog();
     }
 }
@@ -194,17 +211,8 @@ function initScreenManager() {
     window.addEventListener('popstate', function() {
         console.log('Popstate event:', currentScreen);
 
-        if (currentScreen === SCREEN_IDS.PLAYER) {
-            stopVideo();
-            showScreen(SCREEN_IDS.SPORTS);
-        } else if (currentScreen === SCREEN_IDS.SPORTS) {
-            showScreen(SCREEN_IDS.MENU);
-        } else {
-            // At main menu, close app
-            if (window.close) {
-                window.close();
-            }
-        }
+        // Use handleBackButton() to ensure dialog is shown
+        handleBackButton();
     });
 
     console.log('✅ Screen manager initialized');
