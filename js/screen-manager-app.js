@@ -56,9 +56,95 @@ function showScreen(screenId) {
     }
 }
 
+// Show exit confirmation dialog
+function showExitConfirmDialog() {
+    console.log('📋 Showing exit confirmation dialog');
+
+    var dialog = document.getElementById('exit-confirm-dialog');
+    if (!dialog) {
+        console.error('Exit confirm dialog not found');
+        return;
+    }
+
+    // Show dialog
+    dialog.style.display = 'flex';
+
+    // Update focusable elements to include dialog buttons
+    updateFocusableElements();
+
+    // Focus on "No" button by default (safer choice)
+    var noButton = dialog.querySelector('.dialog-btn-no');
+    if (noButton) {
+        var index = focusableElements.indexOf(noButton);
+        if (index >= 0) {
+            setFocus(index);
+        }
+    }
+
+    // Setup button click handlers
+    var yesButton = dialog.querySelector('.dialog-btn-yes');
+    var noButtonElement = dialog.querySelector('.dialog-btn-no');
+
+    if (yesButton) {
+        yesButton.onclick = function() {
+            console.log('User confirmed exit');
+            hideExitConfirmDialog();
+            exitApp();
+        };
+    }
+
+    if (noButtonElement) {
+        noButtonElement.onclick = function() {
+            console.log('User cancelled exit');
+            hideExitConfirmDialog();
+        };
+    }
+}
+
+// Hide exit confirmation dialog
+function hideExitConfirmDialog() {
+    console.log('📋 Hiding exit confirmation dialog');
+
+    var dialog = document.getElementById('exit-confirm-dialog');
+    if (dialog) {
+        dialog.style.display = 'none';
+    }
+
+    // Restore focus to menu screen
+    updateFocusableElements();
+    setFocus(0);
+}
+
+// Exit the app
+function exitApp() {
+    console.log('🚪 Exiting app...');
+
+    // Clean up video if playing
+    if (currentScreen === SCREEN_IDS.PLAYER) {
+        stopVideo();
+    }
+
+    // Try to close the app
+    if (window.close) {
+        window.close();
+    } else if (typeof window.webOSSystem !== 'undefined' && window.webOSSystem.close) {
+        window.webOSSystem.close();
+    } else {
+        console.log('Cannot close app from browser');
+    }
+}
+
 // Handle back button navigation
 function handleBackButton() {
     console.log('Back button pressed, current screen:', currentScreen);
+
+    // Check if exit dialog is open
+    var dialog = document.getElementById('exit-confirm-dialog');
+    if (dialog && dialog.style.display !== 'none') {
+        // If dialog is open, BACK = cancel (same as clicking "No")
+        hideExitConfirmDialog();
+        return;
+    }
 
     if (currentScreen === SCREEN_IDS.PLAYER) {
         stopVideo();
@@ -66,12 +152,8 @@ function handleBackButton() {
     } else if (currentScreen === SCREEN_IDS.SPORTS) {
         showScreen(SCREEN_IDS.MENU);
     } else if (currentScreen === SCREEN_IDS.MENU) {
-        // At main menu, close the app
-        if (window.close) {
-            window.close();
-        } else {
-            console.log('Cannot close app from browser');
-        }
+        // At main menu, show confirmation dialog
+        showExitConfirmDialog();
     }
 }
 
