@@ -16,7 +16,9 @@
       "Bash(chmod:*)",
       "Bash(cd:*)",
       "Bash(curl:*)",
-      "Bash(./gradlew assembleDebug:*)"
+      "Bash(./gradlew assembleDebug:*)",
+      "Bash(sips:*)",
+      "Bash(python3:*)"
     ]
   }
 }
