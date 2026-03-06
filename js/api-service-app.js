@@ -30,13 +30,31 @@ function loadFallbackMatches() {
     ];
 }
 
+// Fetch with timeout
+async function fetchWithTimeout(url, options, timeout) {
+    timeout = timeout || 10000; // Default 10 seconds
+
+    return Promise.race([
+        fetch(url, options),
+        new Promise(function(_, reject) {
+            setTimeout(function() {
+                reject(new Error('Request timeout after ' + timeout + 'ms'));
+            }, timeout);
+        })
+    ]);
+}
+
 // Load matches from API
 async function loadMatchesFromAPI() {
     console.log('🔄 Starting to load matches from API...');
     console.log('API URL:', APP_CONFIG.API_URL + '/get-livestream-group');
 
     try {
-        var response = await fetch(APP_CONFIG.API_URL + '/get-livestream-group');
+        var response = await fetchWithTimeout(
+            APP_CONFIG.API_URL + '/get-livestream-group',
+            {},
+            15000 // 15 second timeout
+        );
         console.log('📡 API Response status:', response.status);
 
         var data = await response.json();
@@ -96,13 +114,17 @@ async function loadMatchDetail(matchId) {
 
     try {
         // Call API POST to get match detail and video link
-        var response = await fetch(APP_CONFIG.API_URL + '/match-detail?matchId=' + matchId, {
-            method: 'POST',
-            headers: {
-                'accept': '*/*'
+        var response = await fetchWithTimeout(
+            APP_CONFIG.API_URL + '/match-detail?matchId=' + matchId,
+            {
+                method: 'POST',
+                headers: {
+                    'accept': '*/*'
+                },
+                body: ''
             },
-            body: ''
-        });
+            15000 // 15 second timeout
+        );
 
         console.log('📡 Match detail API response status:', response.status);
 

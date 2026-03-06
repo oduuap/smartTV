@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize all modules
     initScreenManager();
+    initSoundManager();
     initInputHandlers();
     initVideoPlayer();
 
@@ -86,16 +87,15 @@ function setupMenuListeners() {
     console.log('📋 Found ' + menuItems.length + ' menu items');
 
     menuItems.forEach(function(item, index) {
-        var category = item.getAttribute('data-category');
-        console.log('Menu item ' + (index + 1) + ': category="' + category + '"');
-
         item.addEventListener('click', function() {
             var category = this.getAttribute('data-category');
-            console.log('🖱️  Clicked menu item: ' + category);
+            console.log('Menu clicked:', category);
 
             if (category === 'sports') {
-                console.log('🏀 Loading sports screen...');
-                showSportsScreen();
+                // Use setTimeout to prevent blocking UI
+                setTimeout(function() {
+                    showSportsScreen();
+                }, 10);
             }
         });
     });
@@ -117,23 +117,18 @@ function setupMenuListeners() {
 
 // Show sports screen with football matches
 async function showSportsScreen() {
-    console.log('=== 🏀 showSportsScreen() CALLED ===');
-
     showScreen(SCREEN_IDS.SPORTS);
-    console.log('✅ Switched to screen-sports');
 
     var sportsList = document.querySelector('.sports-list');
-    console.log('📋 sportsList element:', sportsList);
-
     if (!sportsList) {
-        console.error('❌ sportsList element not found');
+        console.error('sportsList not found');
         return;
     }
 
-    // Force display grid
-    sportsList.style.display = 'grid';
-    sportsList.style.gridTemplateColumns = 'repeat(3, 1fr)';
-    sportsList.style.gap = '25px';
+    // Clear any inline styles (let CSS handle it)
+    sportsList.style.display = '';
+    sportsList.style.gridTemplateColumns = '';
+    sportsList.style.gap = '';
 
     // Show loading message with SmartTV style
     showLoadingIndicator(sportsList, 'Đang tải trận đấu');
@@ -144,9 +139,22 @@ async function showSportsScreen() {
     // Render matches
     renderMatchList(footballMatches, sportsList, playMatchById);
 
-    // Update focusable elements and set focus to first item
-    updateFocusableElements();
-    setFocus(0);
+    // Scroll to top
+    var sportsScreen = document.getElementById(SCREEN_IDS.SPORTS);
+    if (sportsScreen) {
+        sportsScreen.scrollTop = 0;
+    }
+
+    // Update focusable elements and set focus to first MATCH item (skip back button)
+    // Use setTimeout to ensure DOM is fully painted
+    setTimeout(function() {
+        updateFocusableElements();
+        if (focusableElements.length > 1) {
+            setFocus(1); // Skip back button, focus on first match item
+        } else if (focusableElements.length === 1) {
+            setFocus(0); // Only back button
+        }
+    }, 50);
 }
 
 // Play match by ID (call API to get video link)
@@ -171,7 +179,11 @@ async function playMatchById(matchId) {
         if (!result.success || !result.videoUrl) {
             console.error('❌ No video link found from APIs');
             console.error('Result:', JSON.stringify(result, null, 2));
-            alert('Không tìm thấy link video cho trận đấu này!\n\nVui lòng thử trận khác hoặc kiểm tra kết nối mạng.');
+            if (typeof showErrorMessage === 'function') {
+                showErrorMessage('Không tìm thấy link video cho trận đấu này! Vui lòng thử trận khác.');
+            } else {
+                alert('Không tìm thấy link video cho trận đấu này!\n\nVui lòng thử trận khác hoặc kiểm tra kết nối mạng.');
+            }
             currentMatchId = null;
             return;
         }
@@ -242,7 +254,11 @@ async function playMatchById(matchId) {
         console.error('Error message:', error.message);
         console.error('Error stack:', error.stack);
         console.error('========================================');
-        alert('Không thể tải video. Vui lòng thử lại!\n\nLỗi: ' + error.message);
+        if (typeof showErrorMessage === 'function') {
+            showErrorMessage('Không thể tải video. Vui lòng thử lại! Lỗi: ' + error.message);
+        } else {
+            alert('Không thể tải video. Vui lòng thử lại!\n\nLỗi: ' + error.message);
+        }
         currentMatchId = null;
     }
 }

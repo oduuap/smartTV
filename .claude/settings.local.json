@@ -18,7 +18,11 @@
       "Bash(curl:*)",
       "Bash(./gradlew assembleDebug:*)",
       "Bash(sips:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(./build-ipk-clean.sh:*)",
+      "Bash(./deploy-tv.sh:*)",
+      "Bash(ares-setup-device:*)",
+      "Bash(ares-novacom:*)"
     ]
   }
 }

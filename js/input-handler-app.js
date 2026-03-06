@@ -8,7 +8,7 @@ var focusableElements = [];
 
 // Throttle to prevent key stuck on TV
 var isNavigating = false;
-var NAV_THROTTLE_MS = 80; // 80ms delay between navigation
+var NAV_THROTTLE_MS = 10; // 10ms delay between navigation (very fast response)
 
 // Update focusable elements based on current screen
 function updateFocusableElements() {
@@ -32,6 +32,20 @@ function setFocus(index) {
         focusedIndex = index;
         focusableElements[index].classList.add('focused');
         focusableElements[index].focus();
+
+        // Play focus sound
+        if (typeof playFocusSound === 'function') {
+            playFocusSound();
+        }
+
+        // Scroll into view for sports list (smooth scroll)
+        if (currentScreen === SCREEN_IDS.SPORTS) {
+            focusableElements[index].scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest'
+            });
+        }
     }
 }
 
@@ -49,42 +63,57 @@ function moveFocus(direction) {
 
     var newIndex = focusedIndex;
 
-    // For menu screen and sports screen, use grid navigation
-    if (currentScreen === SCREEN_IDS.MENU || currentScreen === SCREEN_IDS.SPORTS) {
-        var columns = currentScreen === SCREEN_IDS.MENU ? GRID_CONFIG.MENU_COLUMNS : GRID_CONFIG.SPORTS_COLUMNS;
+    // Simple navigation for main menu (4 items in a row)
+    if (currentScreen === SCREEN_IDS.MENU) {
         var totalItems = focusableElements.length;
-        var currentRow = Math.floor(focusedIndex / columns);
-        var currentCol = focusedIndex % columns;
-        var totalRows = Math.ceil(totalItems / columns);
 
-        if (direction === 'left') {
-            // Move left within row, stop at left edge
-            if (currentCol > 0) {
-                newIndex = focusedIndex - 1;
+        if (direction === 'left' && focusedIndex > 0) {
+            newIndex = focusedIndex - 1;
+        } else if (direction === 'right' && focusedIndex < totalItems - 1) {
+            newIndex = focusedIndex + 1;
+        }
+        // Up/down do nothing in main menu (horizontal only)
+    }
+    // Grid navigation for sports screen
+    else if (currentScreen === SCREEN_IDS.SPORTS) {
+        var columns = GRID_CONFIG.SPORTS_COLUMNS;
+        var totalItems = focusableElements.length;
+        var isBackButton = focusedIndex === 0;
+
+        if (isBackButton) {
+            // Back button: only down allowed
+            if (direction === 'down' && totalItems > 1) {
+                newIndex = 1; // Go to first match item
             }
-        } else if (direction === 'right') {
-            // Move right within row, stop at right edge or last item
-            if (currentCol < columns - 1 && focusedIndex < totalItems - 1) {
-                newIndex = focusedIndex + 1;
-            }
-        } else if (direction === 'up') {
-            // Move up 1 row
-            var targetIndex = focusedIndex - columns;
-            if (targetIndex >= 0) {
-                newIndex = targetIndex;
-            }
-        } else if (direction === 'down') {
-            // Move down 1 row with smart column handling
-            var targetIndex = focusedIndex + columns;
-            if (targetIndex < totalItems) {
-                // Target exists, move there
-                newIndex = targetIndex;
-            } else if (currentRow < totalRows - 1) {
-                // Last row: move to last item if we're beyond it
-                var lastRowStart = (totalRows - 1) * columns;
-                var lastRowItems = totalItems - lastRowStart;
-                var targetCol = Math.min(currentCol, lastRowItems - 1);
-                newIndex = lastRowStart + targetCol;
+        } else {
+            // Regular grid navigation (skip back button at index 0)
+            var gridIndex = focusedIndex - 1; // Adjust for back button
+            var currentRow = Math.floor(gridIndex / columns);
+            var currentCol = gridIndex % columns;
+
+            if (direction === 'left') {
+                if (currentCol > 0 && focusedIndex > 1) {
+                    newIndex = focusedIndex - 1;
+                }
+            } else if (direction === 'right') {
+                if (currentCol < columns - 1 && focusedIndex + 1 < totalItems) {
+                    var nextGridIndex = gridIndex + 1;
+                    var nextRow = Math.floor(nextGridIndex / columns);
+                    if (nextRow === currentRow) {
+                        newIndex = focusedIndex + 1;
+                    }
+                }
+            } else if (direction === 'up') {
+                if (currentRow === 0) {
+                    newIndex = 0; // First row: go to back button
+                } else {
+                    newIndex = focusedIndex - columns;
+                }
+            } else if (direction === 'down') {
+                var targetIndex = focusedIndex + columns;
+                if (targetIndex < totalItems) {
+                    newIndex = targetIndex;
+                }
             }
         }
     } else {
@@ -100,12 +129,18 @@ function moveFocus(direction) {
         }
     }
 
-    setFocus(newIndex);
+    // Only set focus if changed
+    if (newIndex !== focusedIndex) {
+        setFocus(newIndex);
+    }
 }
 
 // Handle keyboard/remote key press
 function handleKeyPress(event) {
-    console.log('Key pressed:', event.keyCode);
+    // Only log important keys (not arrow keys to reduce spam)
+    if (event.keyCode === KEY_CODES.ENTER || event.keyCode === KEY_CODES.BACK_WEBOS) {
+        console.log('Key pressed:', event.keyCode);
+    }
 
     switch(event.keyCode) {
         case KEY_CODES.LEFT: // Left arrow
@@ -125,6 +160,13 @@ function handleKeyPress(event) {
             event.preventDefault();
             break;
         case KEY_CODES.ENTER: // Enter/OK button
+            console.log('ENTER pressed on index:', focusedIndex);
+
+            // Play select sound
+            if (typeof playSelectSound === 'function') {
+                playSelectSound();
+            }
+
             if (focusableElements[focusedIndex]) {
                 focusableElements[focusedIndex].click();
             }
@@ -137,6 +179,11 @@ function handleKeyPress(event) {
             event.preventDefault();
             event.stopPropagation();
             event.stopImmediatePropagation();
+
+            // Play back sound
+            if (typeof playBackSound === 'function') {
+                playBackSound();
+            }
 
             handleBackButton();
 
@@ -313,6 +360,26 @@ function initMagicRemote() {
     console.log('✅ Magic Remote pointer support initialized');
 }
 
+// Prevent scroll wheel from affecting focus
+var scrollProtectionTimer = null;
+function preventScrollWheelFocus() {
+    // Prevent scroll wheel on sports screen from losing focus
+    var sportsScreen = document.getElementById(SCREEN_IDS.SPORTS);
+    if (sportsScreen) {
+        sportsScreen.addEventListener('wheel', function(e) {
+            // Throttle scroll protection
+            if (scrollProtectionTimer) return;
+
+            scrollProtectionTimer = setTimeout(function() {
+                scrollProtectionTimer = null;
+                if (currentScreen === SCREEN_IDS.SPORTS && focusableElements[focusedIndex]) {
+                    focusableElements[focusedIndex].classList.add('focused');
+                }
+            }, 50);
+        });
+    }
+}
+
 // Initialize input handlers
 function initInputHandlers() {
     console.log('🎮 Initializing input handlers...');
@@ -323,8 +390,57 @@ function initInputHandlers() {
     // Setup Magic Remote pointer support
     initMagicRemote();
 
+    // Prevent scroll wheel from losing focus
+    preventScrollWheelFocus();
+
     console.log('✅ Input handlers initialized');
     console.log('📋 Focusable elements:', focusableElements.length);
+}
+
+// Restore focus to match item by matchId
+function restoreFocusToMatch(matchId) {
+    console.log('🎯 Restoring focus to match:', matchId);
+    console.log('Focusable elements count:', focusableElements.length);
+
+    // Find the match item with this matchId
+    var matchItems = document.querySelectorAll('.match-item');
+    console.log('Match items found:', matchItems.length);
+
+    var targetIndex = -1;
+
+    matchItems.forEach(function(item, index) {
+        var itemMatchId = item.getAttribute('data-match-id');
+        if (itemMatchId === matchId) {
+            // +1 because index 0 is back button
+            targetIndex = index + 1;
+            console.log('✅ Found match at index:', targetIndex, 'matchId:', itemMatchId);
+        }
+    });
+
+    if (targetIndex >= 0 && targetIndex < focusableElements.length) {
+        console.log('Setting focus to index:', targetIndex);
+        setFocus(targetIndex);
+
+        // Scroll to the element
+        if (focusableElements[targetIndex]) {
+            focusableElements[targetIndex].scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest'
+            });
+        }
+
+        console.log('✅ Focus restored to match item');
+    } else {
+        console.warn('⚠️ Could not find match item (targetIndex:', targetIndex, ', focusableElements.length:', focusableElements.length, ')');
+        console.warn('Focusing on first match item instead');
+
+        if (focusableElements.length > 1) {
+            setFocus(1); // First match (skip back button)
+        } else if (focusableElements.length === 1) {
+            setFocus(0); // Only back button
+        }
+    }
 }
 
 console.log('✅ Input Handler loaded');

@@ -24,7 +24,7 @@ function playVideo(videoData) {
 
     if (!videoUrl) {
         console.error('❌ ERROR: No video URL provided');
-        alert('Không có URL video!');
+        showErrorMessage('Không có URL video!');
         return;
     }
 
@@ -126,6 +126,25 @@ function playVideo(videoData) {
         if (videoPlayer.error) {
             console.error('Error code:', videoPlayer.error.code);
             console.error('Error message:', videoPlayer.error.message);
+
+            // Handle different error types
+            var errorMsg = 'Lỗi phát video';
+            switch(videoPlayer.error.code) {
+                case 1: // MEDIA_ERR_ABORTED
+                    errorMsg = 'Phát video bị hủy';
+                    break;
+                case 2: // MEDIA_ERR_NETWORK
+                    errorMsg = 'Lỗi mạng. Vui lòng kiểm tra kết nối!';
+                    break;
+                case 3: // MEDIA_ERR_DECODE
+                    errorMsg = 'Lỗi giải mã video';
+                    break;
+                case 4: // MEDIA_ERR_SRC_NOT_SUPPORTED
+                    errorMsg = 'Định dạng video không được hỗ trợ';
+                    break;
+            }
+
+            showErrorMessage(errorMsg);
         }
     });
 
@@ -190,7 +209,7 @@ function playVideo(videoData) {
                                 console.error('💀 Fatal error, cannot recover');
                                 hlsPlayer.destroy();
                                 hlsPlayer = null;
-                                alert('Không thể phát video. Lỗi: ' + data.details);
+                                showErrorMessage('Không thể phát video. Lỗi: ' + data.details);
                                 break;
                         }
                     }
@@ -239,12 +258,12 @@ function tryNativeHLS(videoPlayer, videoUrl) {
                 console.error('❌ Native HLS play() error:', error);
                 console.error('Error name:', error.name);
                 console.error('Error message:', error.message);
-                alert('Không thể phát video. Vui lòng thử lại!');
+                showErrorMessage('Không thể phát video. Vui lòng thử lại!');
             });
         }, 500);
     } else {
         console.error('❌ Native HLS is NOT supported');
-        alert('Trình duyệt không hỗ trợ phát video HLS');
+        showErrorMessage('Trình duyệt không hỗ trợ phát video HLS');
     }
 }
 
@@ -336,6 +355,8 @@ function stopVideo() {
     var videoPlayer = document.getElementById('video-player');
     var playerContainer = document.querySelector('.player-container');
 
+    console.log('🛑 Stopping video and cleaning up...');
+
     // Save final position before stopping
     if (videoPlayer && currentMatchId && typeof saveVideoPosition === 'function') {
         saveVideoPosition(currentMatchId, videoPlayer.currentTime, videoPlayer.duration);
@@ -344,9 +365,25 @@ function stopVideo() {
     // Stop position tracking
     stopVideoPositionTracking();
 
+    // Clean up HLS player FIRST (before removing video src)
+    if (hlsPlayer) {
+        console.log('🧹 Destroying HLS player');
+        hlsPlayer.destroy();
+        hlsPlayer = null;
+    }
+
+    // Remove ALL video event listeners BEFORE clearing src (to prevent error events)
     if (videoPlayer) {
+        console.log('🧹 Removing video event listeners');
+        // Clone and replace video element to remove all listeners
+        var newVideoPlayer = videoPlayer.cloneNode(true);
+        videoPlayer.parentNode.replaceChild(newVideoPlayer, videoPlayer);
+        videoPlayer = newVideoPlayer;
+
+        // Now safe to pause and clear
         videoPlayer.pause();
-        videoPlayer.src = '';
+        videoPlayer.removeAttribute('src');
+        videoPlayer.load(); // Reset the element
     }
 
     // Clear hide timeout
@@ -355,25 +392,14 @@ function stopVideo() {
         videoHideTimeout = null;
     }
 
-    // Remove event listeners
+    // Remove UI event listeners
     if (playerContainer) {
         playerContainer.removeEventListener('mousemove', showVideoInfo);
     }
     document.removeEventListener('keydown', showVideoInfoOnKey);
-    if (videoPlayer) {
-        videoPlayer.removeEventListener('click', showVideoInfo);
-    }
 
-    // Clean up HLS player
-    if (hlsPlayer) {
-        hlsPlayer.destroy();
-        hlsPlayer = null;
-    }
-
-    // Clear current match ID
-    currentMatchId = null;
-
-    console.log('Video stopped and cleaned up');
+    // Note: Don't clear currentMatchId here - we need it to restore focus
+    console.log('✅ Video stopped and cleaned up');
 }
 
 // Initialize video player on load
@@ -392,6 +418,90 @@ function initVideoPlayer() {
     console.log('  - networkState:', videoPlayer.networkState);
     console.log('  - controls:', videoPlayer.controls);
     console.log('  - autoplay:', videoPlayer.autoplay);
+}
+
+// Show error message overlay
+function showErrorMessage(message) {
+    console.error('🚨 Showing error:', message);
+
+    // Create error overlay if doesn't exist
+    var errorOverlay = document.getElementById('error-overlay');
+    if (!errorOverlay) {
+        errorOverlay = document.createElement('div');
+        errorOverlay.id = 'error-overlay';
+        errorOverlay.style.cssText = '\
+            position: fixed;\
+            top: 0;\
+            left: 0;\
+            width: 100%;\
+            height: 100%;\
+            background: rgba(0, 0, 0, 0.9);\
+            display: flex;\
+            justify-content: center;\
+            align-items: center;\
+            z-index: 10000;\
+        ';
+
+        var errorBox = document.createElement('div');
+        errorBox.style.cssText = '\
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);\
+            border: 3px solid #ff4444;\
+            border-radius: 20px;\
+            padding: 60px 80px;\
+            text-align: center;\
+            box-shadow: 0 0 50px rgba(255, 68, 68, 0.5);\
+        ';
+
+        var errorTitle = document.createElement('h2');
+        errorTitle.style.cssText = '\
+            color: #ff4444;\
+            font-size: 48px;\
+            margin-bottom: 20px;\
+        ';
+        errorTitle.textContent = '⚠️ Lỗi';
+
+        var errorMessage = document.createElement('p');
+        errorMessage.id = 'error-message-text';
+        errorMessage.style.cssText = '\
+            color: white;\
+            font-size: 32px;\
+            margin-bottom: 40px;\
+        ';
+
+        var errorButton = document.createElement('button');
+        errorButton.textContent = 'Đóng';
+        errorButton.className = 'focusable';
+        errorButton.style.cssText = '\
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);\
+            color: white;\
+            padding: 20px 60px;\
+            font-size: 32px;\
+            border: 3px solid #ff6666;\
+            border-radius: 15px;\
+            cursor: pointer;\
+        ';
+        errorButton.onclick = function() {
+            document.body.removeChild(errorOverlay);
+            showScreen(SCREEN_IDS.SPORTS);
+        };
+
+        errorBox.appendChild(errorTitle);
+        errorBox.appendChild(errorMessage);
+        errorBox.appendChild(errorButton);
+        errorOverlay.appendChild(errorBox);
+        document.body.appendChild(errorOverlay);
+
+        // Focus on button
+        setTimeout(function() {
+            errorButton.focus();
+        }, 100);
+    }
+
+    // Update message
+    var errorMessageText = document.getElementById('error-message-text');
+    if (errorMessageText) {
+        errorMessageText.textContent = message;
+    }
 }
 
 console.log('✅ Video Player loaded');

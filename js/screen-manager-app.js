@@ -39,8 +39,13 @@ function showScreen(screenId) {
             }
 
             // Update focusable elements and set initial focus
-            updateFocusableElements();
-            setFocus(0);
+            // Skip auto-focus for sports screen (will be set after data loads)
+            if (screenId !== SCREEN_IDS.SPORTS) {
+                updateFocusableElements();
+                if (focusableElements.length > 0) {
+                    setFocus(0);
+                }
+            }
 
             // Save app state after screen transition
             if (typeof saveAppState === 'function') {
@@ -162,8 +167,30 @@ function handleBackButton() {
 
     if (currentScreen === SCREEN_IDS.PLAYER) {
         console.log('Player screen - going back to sports');
+
+        // Store the match ID before stopping video
+        var lastWatchedMatchId = currentMatchId;
+
         stopVideo();
         showScreen(SCREEN_IDS.SPORTS);
+
+        // Update focusable elements FIRST
+        updateFocusableElements();
+
+        // Restore focus to the match item that was playing
+        if (lastWatchedMatchId) {
+            setTimeout(function() {
+                restoreFocusToMatch(lastWatchedMatchId);
+            }, 50); // Small delay to ensure DOM is ready
+        } else {
+            // No match ID, focus on first match item
+            if (focusableElements.length > 1) {
+                setFocus(1); // Skip back button
+            }
+        }
+
+        // Clear currentMatchId after restoring focus
+        currentMatchId = null;
     } else if (currentScreen === SCREEN_IDS.SPORTS) {
         console.log('Sports screen - going back to menu');
         showScreen(SCREEN_IDS.MENU);

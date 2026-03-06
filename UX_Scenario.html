@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports TV - UX Scenario Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 60px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            border-bottom: 3px solid #f59e0b;
+            padding-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            color: #1a1a2e;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 24px;
+            color: #f59e0b;
+            font-weight: 600;
+        }
+
+        .header .meta {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .section {
+            margin-bottom: 50px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 28px;
+            color: #1a1a2e;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .section-content {
+            padding: 20px;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info-box h3 {
+            color: #1a1a2e;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .feature-item h4 {
+            color: #f59e0b;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .flow-step {
+            background: white;
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .flow-step-number {
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background: #f59e0b;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .flow-step h3 {
+            color: #1a1a2e;
+            margin-bottom: 15px;
+            margin-top: 10px;
+            font-size: 22px;
+        }
+
+        .flow-step-content {
+            padding-left: 10px;
+        }
+
+        .screenshot-placeholder {
+            background: #e0e0e0;
+            border: 2px dashed #999;
+            padding: 40px;
+            text-align: center;
+            color: #666;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+
+        ul {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        ul li {
+            margin: 10px 0;
+            line-height: 1.8;
+        }
+
+        .scenario-box {
+            background: #fff9e6;
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .scenario-box h3 {
+            color: #1a1a2e;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .key-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .key-feature-tag {
+            background: #f59e0b;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f59e0b;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+            color: #666;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>SPORTS TV - LUONG SON</h1>
+            <div class="subtitle">UX Scenario Document</div>
+            <div class="meta">
+                <strong>App Version:</strong> 1.1.0<br>
+                <strong>Platform:</strong> LG webOS Smart TV<br>
+                <strong>Document Date:</strong> March 2026
+            </div>
+        </div>
+
+        <!-- 1. App Overview -->
+        <div class="section">
+            <h2 class="section-title">1. Application Overview</h2>
+            <div class="section-content">
+                <div class="info-box">
+                    <h3>Description</h3>
+                    <p>Sports TV is a live sports streaming application designed for LG webOS Smart TVs. The app provides users with access to live football matches, real-time scores, and HD streaming with HLS support. It features an intuitive interface optimized for TV remote control navigation.</p>
+                </div>
+
+                <div class="key-features">
+                    <span class="key-feature-tag">Live Sports Streaming</span>
+                    <span class="key-feature-tag">HD Quality (HLS)</span>
+                    <span class="key-feature-tag">Remote Control Navigation</span>
+                    <span class="key-feature-tag">Real-time Scores</span>
+                    <span class="key-feature-tag">Match Details</span>
+                    <span class="key-feature-tag">Vietnamese Interface</span>
+                </div>
+
+                <h3 style="margin-top: 30px; color: #1a1a2e;">Target Users</h3>
+                <ul>
+                    <li><strong>Primary:</strong> Vietnamese football fans who want to watch live matches on their Smart TV</li>
+                    <li><strong>Secondary:</strong> Sports enthusiasts looking for convenient streaming options</li>
+                    <li><strong>Age Group:</strong> 18-65 years old</li>
+                    <li><strong>Technical Level:</strong> Basic to intermediate TV users</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 2. App Structure -->
+        <div class="section">
+            <h2 class="section-title">2. Application Structure</h2>
+            <div class="section-content">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Screen</th>
+                            <th>Purpose</th>
+                            <th>Key Elements</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Loading Screen</strong></td>
+                            <td>Initial app launch, brand introduction</td>
+                            <td>App logo, loading animation</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Main Menu</strong></td>
+                            <td>Category selection hub</td>
+                            <td>4 categories: Sports, Movies, News, Music</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sports List</strong></td>
+                            <td>Browse available live matches</td>
+                            <td>Match cards with teams, scores, commentator info</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Video Player</strong></td>
+                            <td>Watch live match streaming</td>
+                            <td>Video player, match info, controls</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <h4>Navigation System</h4>
+                        <ul>
+                            <li>Remote control support (D-pad)</li>
+                            <li>Focus-based navigation</li>
+                            <li>Back button support</li>
+                            <li>Exit confirmation dialog</li>
+                        </ul>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Video Features</h4>
+                        <ul>
+                            <li>HLS streaming support</li>
+                            <li>Adaptive bitrate streaming</li>
+                            <li>Play/Pause/Stop controls</li>
+                            <li>Resume playback from saved position</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. User Scenarios -->
+        <div class="section">
+            <h2 class="section-title">3. User Scenarios</h2>
+
+            <!-- Scenario 1 -->
+            <div class="scenario-box">
+                <h3>Scenario 1: First Time User - Launching App and Finding a Match</h3>
+                <p><strong>User Profile:</strong> Nam, 35 years old, football fan, wants to watch a live match</p>
+                <p><strong>Goal:</strong> Launch app and watch a live football match</p>
+                <p><strong>Context:</strong> Evening, sitting on couch with TV remote</p>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">1</div>
+                    <h3>Launch Application</h3>
+                    <div class="flow-step-content">
+                        <p><strong>Action:</strong> User selects "Sports TV" from LG webOS launcher</p>
+                        <p><strong>System Response:</strong> App displays loading screen with "SPORTS TV LUONG SON" title and loading animation</p>
+                        <p><strong>Duration:</strong> 1 second</p>
+                        <div class="screenshot-placeholder">
+                            [Screenshot: Loading Screen with app logo and loading dots]
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">2</div>
+                    <h3>View Main Menu</h3>
+                    <div class="flow-step-content">
+                        <p><strong>Action:</strong> Loading completes automatically</p>
+                        <p><strong>System Response:</strong> Main menu appears with 4 category options displayed in a grid:
+                            <ul>
+                                <li>1. Thể Thao (Sports) - focused by default</li>
+                                <li>2. Phim (Movies)</li>
+                                <li>3. Tin Tức (News)</li>
+                                <li>4. Âm Nhạc (Music)</li>
+                            </ul>
+                        </p>
+                        <p><strong>Visual Feedback:</strong> First item (Sports) is highlighted with focus effect</p>
+                        <div class="screenshot-placeholder">
+                            [Screenshot: Main Menu with 4 category cards, Sports category highlighted]
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">3</div>
+                    <h3>Select Sports Category</h3>
+                    <div class="flow-step-content">
+                        <p><strong>Action:</strong> User presses ENTER/OK button on "Thể Thao" (already focused)</p>
+                        <p><strong>System Response:</strong>
+                            <ul>
+                                <li>Screen transitions to Sports List screen</li>
+                                <li>Loading indicator appears: "Đang tải trận đấu..."</li>
+                                <li>App fetches live match data from API</li>
+                            </ul>
+                        </p>
+                        <div class="screenshot-placeholder">
+                            [Screenshot: Sports List screen with loading indicator]
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">4</div>
+                    <h3>Browse Live Matches</h3>
+                    <div class="flow-step-content">
+                        <p><strong>System Response:</strong> Match list displays in 3-column grid. Each match card shows:
+                            <ul>
+                                <li>Team logos (home vs away)</li>
+                                <li>Team names</li>
+                                <li>Current score</li>
+                                <li>League name with colored badge</li>
+                                <li>Commentator name and avatar</li>
+                                <li>Live status indicator (if live)</li>
+                                <li>View count</li>
+                            </ul>
+                        </p>
+                        <p><strong>Action:</strong> User navigates using arrow keys (UP/DOWN/LEFT/RIGHT) to browse matches</p>
+                        <p><strong>Visual Feedback:</strong> Selected match card is highlighted with border and scale effect</p>
+                        <div class="screenshot-placeholder">
+                            [Screenshot: Sports List with multiple match cards in grid layout, one card focused]
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">5</div>
+                    <h3>Select a Match</h3>
+                    <div class="flow-step-content">
+                        <p><strong>Action:</strong> User presses ENTER/OK on desired match</p>
+                        <p><strong>System Response:</strong>
+                            <ul>
+                                <li>App calls match detail API to get video stream URL</li>
+                                <li>Loading indicator appears</li>
+                                <li>If successful, transitions to Video Player screen</li>
+                            </ul>
+                        </p>
+                        <p><strong>Error Handling:</strong> If no video link found, shows error alert: "Không tìm thấy link video cho trận đấu này!"</p>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">6</div>
+                    <h3>Watch Match</h3>
+                    <div class="flow-step-content">
+                        <p><strong>System Response:</strong> Video Player screen displays:
+                            <ul>
+                                <li>Full-screen video player with HLS stream</li>
+                                <li>Video automatically starts playing</li>
+                                <li>Match title displayed at top</li>
+                                <li>Commentator information shown</li>
+                                <li>Back button in top-left corner</li>
+                            </ul>
+                        </p>
+                        <p><strong>User Controls:</strong>
+                            <ul>
+                                <li>PLAY/PAUSE - control playback</li>
+                                <li>BACK button - return to match list</li>
+                                <li>Remote media keys supported</li>
+                            </ul>
+                        </p>
+                        <div class="screenshot-placeholder">
+                            [Screenshot: Video Player with live match, showing match info overlay]
+                        </div>
+                    </div>
+                </div>
+
+                <p style="margin-top: 30px;"><strong>Outcome:</strong> User successfully finds and watches a live football match in under 30 seconds from app launch</p>
+            </div>
+
+            <!-- Scenario 2 -->
+            <div class="scenario-box">
+                <h3>Scenario 2: Returning User - Resume Previous Match</h3>
+                <p><strong>User Profile:</strong> Hoa, 28 years old, was watching a match but had to leave</p>
+                <p><strong>Goal:</strong> Continue watching from where she left off</p>
+                <p><strong>Context:</strong> Previously closed app while watching, now returning</p>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">1</div>
+                    <h3>Launch App</h3>
+                    <div class="flow-step-content">
+                        <p><strong>System Response:</strong>
+                            <ul>
+                                <li>App detects saved state in localStorage</li>
+                                <li>Automatically restores previous screen (Video Player)</li>
+                                <li>Loads the same match that was playing</li>
+                            </ul>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">2</div>
+                    <h3>Resume Playback</h3>
+                    <div class="flow-step-content">
+                        <p><strong>System Response:</strong>
+                            <ul>
+                                <li>Video player loads</li>
+                                <li>After 3 seconds, automatically seeks to saved position</li>
+                                <li>Shows notification: "⏩ Tiếp tục từ MM:SS"</li>
+                                <li>Notification fades after 3 seconds</li>
+                            </ul>
+                        </p>
+                        <p><strong>Outcome:</strong> User seamlessly continues watching without having to navigate or search again</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scenario 3 -->
+            <div class="scenario-box">
+                <h3>Scenario 3: User Exits App</h3>
+                <p><strong>User Profile:</strong> Any user finishing their session</p>
+                <p><strong>Goal:</strong> Close the app</p>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">1</div>
+                    <h3>Press Back/Exit Button</h3>
+                    <div class="flow-step-content">
+                        <p><strong>Action:</strong> User presses BACK button on remote when on Main Menu</p>
+                        <p><strong>System Response:</strong> Exit confirmation dialog appears with:
+                            <ul>
+                                <li>Title: "Thoát ứng dụng?"</li>
+                                <li>Message: "Bạn có chắc muốn thoát Sports TV không?"</li>
+                                <li>Two buttons: "Có" (Yes - focused) and "Không" (No)</li>
+                            </ul>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="flow-step-number">2</div>
+                    <h3>Confirm or Cancel</h3>
+                    <div class="flow-step-content">
+                        <p><strong>If "Có" (Yes):</strong> App closes and returns to LG webOS launcher</p>
+                        <p><strong>If "Không" (No):</strong> Dialog closes, user stays in app</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. User Flow Diagram -->
+        <div class="section">
+            <h2 class="section-title">4. User Flow Diagram</h2>
+            <div class="section-content">
+                <div style="background: #f8f9fa; padding: 40px; border-radius: 8px; text-align: center;">
+                    <pre style="text-align: left; font-family: monospace; line-height: 2;">
+    [App Launch]
+         ↓
+    [Loading Screen] (1 sec)
+         ↓
+    [Main Menu]
+         ↓ (Select "Thể Thao")
+    [Sports List Screen]
+         ↓ (Loading matches from API)
+    [Display Match Cards]
+         ↓ (User selects match)
+    [Load Match Detail API]
+         ↓
+    [Video Player Screen]
+         ↓ (Video plays)
+    [User watches match]
+         ↓
+    [Back to Sports List] ← → [Back to Main Menu] ← → [Exit App]
+                    </pre>
+                </div>
+
+                <h3 style="margin-top: 30px; color: #1a1a2e;">Alternative Flows</h3>
+                <ul>
+                    <li><strong>No Internet Connection:</strong> Show error message, load fallback match data</li>
+                    <li><strong>Video URL Not Available:</strong> Show alert, stay on Sports List screen</li>
+                    <li><strong>API Timeout:</strong> Display fallback loading message</li>
+                    <li><strong>State Restoration:</strong> App reopens directly to last viewed screen</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 5. Key Features -->
+        <div class="section">
+            <h2 class="section-title">5. Key Features & Interactions</h2>
+
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <h4>Remote Control Navigation</h4>
+                    <ul>
+                        <li>↑↓←→ arrows for navigation</li>
+                        <li>ENTER/OK to select</li>
+                        <li>BACK button to go back</li>
+                        <li>Focus indicator on all items</li>
+                    </ul>
+                </div>
+
+                <div class="feature-item">
+                    <h4>Match Information Display</h4>
+                    <ul>
+                        <li>Team logos and names</li>
+                        <li>Live scores</li>
+                        <li>League badges</li>
+                        <li>Commentator info with avatar</li>
+                        <li>View counter</li>
+                        <li>Live status badge</li>
+                    </ul>
+                </div>
+
+                <div class="feature-item">
+                    <h4>Video Streaming</h4>
+                    <ul>
+                        <li>HLS protocol support</li>
+                        <li>Adaptive streaming quality</li>
+                        <li>Auto-play on load</li>
+                        <li>Full-screen playback</li>
+                        <li>Standard video controls</li>
+                    </ul>
+                </div>
+
+                <div class="feature-item">
+                    <h4>State Management</h4>
+                    <ul>
+                        <li>Save current screen state</li>
+                        <li>Save video playback position</li>
+                        <li>Auto-restore on relaunch</li>
+                        <li>localStorage-based persistence</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="info-box" style="margin-top: 30px;">
+                <h3>Technical Implementation</h3>
+                <ul>
+                    <li><strong>Platform:</strong> LG webOS (web-based app)</li>
+                    <li><strong>Video Technology:</strong> HLS.js for streaming</li>
+                    <li><strong>API Integration:</strong> REST API for match data and video URLs</li>
+                    <li><strong>Resolution:</strong> Optimized for 1920x1080 (Full HD)</li>
+                    <li><strong>Language:</strong> Vietnamese interface</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 6. Error Handling -->
+        <div class="section">
+            <h2 class="section-title">6. Error Handling & Edge Cases</h2>
+            <div class="section-content">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Scenario</th>
+                            <th>User Experience</th>
+                            <th>System Behavior</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>No Internet Connection</strong></td>
+                            <td>Loading indicator shows, then error message</td>
+                            <td>Fall back to cached/demo data if available</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Video Stream Unavailable</strong></td>
+                            <td>Alert dialog: "Không tìm thấy link video..."</td>
+                            <td>Stay on Sports List, allow user to try another match</td>
+                        </tr>
+                        <tr>
+                            <td><strong>API Timeout</strong></td>
+                            <td>Extended loading state, then fallback data</td>
+                            <td>Show demo matches or cached matches</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Video Playback Error</strong></td>
+                            <td>Video player shows error message</td>
+                            <td>Log error, allow user to go back and retry</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Empty Match List</strong></td>
+                            <td>Message: "Đang tải trận đấu..."</td>
+                            <td>Show placeholder content</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 7. Future Enhancements -->
+        <div class="section">
+            <h2 class="section-title">7. Future Enhancements (Optional)</h2>
+            <div class="section-content">
+                <ul>
+                    <li>Implement Movies, News, and Music categories</li>
+                    <li>Add favorites/bookmarks feature</li>
+                    <li>Schedule notifications for upcoming matches</li>
+                    <li>Multi-language support (English, etc.)</li>
+                    <li>Picture-in-Picture mode</li>
+                    <li>Match highlights and replays</li>
+                    <li>User accounts and personalization</li>
+                    <li>Social sharing features</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Sports TV - LUONG SON</strong></p>
+            <p>Version 1.1.0 | LG webOS Application</p>
+            <p>Contact: oduuapp88@gmail.com</p>
+            <p style="margin-top: 20px; font-size: 14px;">This document describes the user experience scenarios for app submission and quality assurance purposes.</p>
+        </div>
+    </div>
+</body>
+</html>
