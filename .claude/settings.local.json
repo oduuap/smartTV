@@ -22,7 +22,8 @@
       "Bash(./build-ipk-clean.sh:*)",
       "Bash(./deploy-tv.sh:*)",
       "Bash(ares-setup-device:*)",
-      "Bash(ares-novacom:*)"
+      "Bash(ares-novacom:*)",
+      "Bash(rm:*)"
     ]
   }
 }
