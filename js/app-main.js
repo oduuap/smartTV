@@ -80,6 +80,144 @@ document.addEventListener('DOMContentLoaded', function() {
     }, APP_CONFIG.LOADING_SCREEN_DURATION);
 });
 
+// Show "Coming soon" message for features under development
+function showComingSoonMessage(category) {
+    console.log('📋 Showing coming soon message for:', category);
+
+    // Play select sound
+    if (typeof playSelectSound === 'function') {
+        playSelectSound();
+    }
+
+    // Category names in Vietnamese
+    var categoryNames = {
+        'movies': 'Phim',
+        'news': 'Tin Tức',
+        'music': 'Âm Nhạc'
+    };
+    var categoryName = categoryNames[category] || category;
+
+    // Create overlay
+    var overlay = document.createElement('div');
+    overlay.style.cssText = '\
+        position: fixed;\
+        top: 0;\
+        left: 0;\
+        width: 100%;\
+        height: 100%;\
+        background: rgba(0, 0, 0, 0.85);\
+        display: flex;\
+        align-items: center;\
+        justify-content: center;\
+        z-index: 9999;\
+        animation: fadeIn 0.3s ease-in-out;\
+    ';
+
+    // Create message box
+    var messageBox = document.createElement('div');
+    messageBox.style.cssText = '\
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\
+        padding: 50px 80px;\
+        border-radius: 20px;\
+        text-align: center;\
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);\
+        animation: slideIn 0.4s ease-out;\
+    ';
+
+    // Create icon
+    var icon = document.createElement('div');
+    icon.style.cssText = '\
+        font-size: 80px;\
+        margin-bottom: 20px;\
+    ';
+    icon.textContent = '🚧';
+
+    // Create title
+    var title = document.createElement('h2');
+    title.style.cssText = '\
+        color: white;\
+        font-size: 42px;\
+        margin: 0 0 20px 0;\
+        font-weight: bold;\
+    ';
+    title.textContent = categoryName;
+
+    // Create message
+    var message = document.createElement('p');
+    message.style.cssText = '\
+        color: rgba(255, 255, 255, 0.9);\
+        font-size: 28px;\
+        margin: 0;\
+    ';
+    message.textContent = 'Tính năng đang phát triển';
+
+    // Create sub message
+    var subMessage = document.createElement('p');
+    subMessage.style.cssText = '\
+        color: rgba(255, 255, 255, 0.7);\
+        font-size: 22px;\
+        margin: 15px 0 0 0;\
+    ';
+    subMessage.textContent = 'Vui lòng quay lại sau!';
+
+    // Add animations
+    var style = document.createElement('style');
+    style.textContent = '\
+        @keyframes fadeIn {\
+            from { opacity: 0; }\
+            to { opacity: 1; }\
+        }\
+        @keyframes fadeOut {\
+            from { opacity: 1; }\
+            to { opacity: 0; }\
+        }\
+        @keyframes slideIn {\
+            from {\
+                transform: translateY(-50px);\
+                opacity: 0;\
+            }\
+            to {\
+                transform: translateY(0);\
+                opacity: 1;\
+            }\
+        }\
+    ';
+
+    // Assemble
+    document.head.appendChild(style);
+    messageBox.appendChild(icon);
+    messageBox.appendChild(title);
+    messageBox.appendChild(message);
+    messageBox.appendChild(subMessage);
+    overlay.appendChild(messageBox);
+    document.body.appendChild(overlay);
+
+    // Auto dismiss after 3 seconds
+    setTimeout(function() {
+        overlay.style.animation = 'fadeOut 0.3s ease-in-out';
+        setTimeout(function() {
+            if (overlay.parentNode) {
+                overlay.parentNode.removeChild(overlay);
+            }
+            if (style.parentNode) {
+                style.parentNode.removeChild(style);
+            }
+        }, 300);
+    }, 3000);
+
+    // Click to dismiss
+    overlay.addEventListener('click', function() {
+        if (overlay.parentNode) {
+            overlay.parentNode.removeChild(overlay);
+        }
+        if (style.parentNode) {
+            style.parentNode.removeChild(style);
+        }
+    });
+
+    console.log('✅ Coming soon message shown');
+}
+
 // Setup menu event listeners
 function setupMenuListeners() {
     // Menu items click
@@ -96,6 +234,9 @@ function setupMenuListeners() {
                 setTimeout(function() {
                     showSportsScreen();
                 }, 10);
+            } else if (category === 'movies' || category === 'news' || category === 'music') {
+                // Show "Coming soon" message for other categories
+                showComingSoonMessage(category);
             }
         });
     });
