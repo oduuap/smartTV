@@ -77,17 +77,16 @@ function showExitConfirmDialog() {
     // Show dialog
     dialog.style.display = 'flex';
 
-    // Update focusable elements to include dialog buttons
-    updateFocusableElements();
+    // Override focusable elements to ONLY dialog buttons (not menu behind it)
+    focusableElements = Array.from(dialog.querySelectorAll('.focusable'));
+    focusedIndex = 0;
 
-    // Focus on "No" button by default (safer choice)
-    var noButton = dialog.querySelector('.dialog-btn-no');
-    if (noButton) {
-        var index = focusableElements.indexOf(noButton);
-        if (index >= 0) {
-            setFocus(index);
-            console.log('Focused on NO button at index:', index);
-        }
+    // Focus on "No" button by default (index 1, safer choice)
+    if (focusableElements.length > 1) {
+        setFocus(1);
+        console.log('Focused on NO button at index: 1');
+    } else if (focusableElements.length > 0) {
+        setFocus(0);
     }
 
     // Setup button click handlers
@@ -109,7 +108,7 @@ function showExitConfirmDialog() {
         };
     }
 
-    console.log('✅ Exit dialog shown, flag set to:', isExitDialogOpen);
+    console.log('✅ Exit dialog shown, focusable count:', focusableElements.length);
 }
 
 // Hide exit confirmation dialog
@@ -140,11 +139,13 @@ function exitApp() {
         stopVideo();
     }
 
-    // Try to close the app
-    if (window.close) {
-        window.close();
-    } else if (typeof window.webOSSystem !== 'undefined' && window.webOSSystem.close) {
+    // On webOS: use webOSSystem.close() (correct API)
+    if (typeof window.webOSSystem !== 'undefined' && window.webOSSystem.close) {
+        console.log('Closing via webOSSystem.close()');
         window.webOSSystem.close();
+    } else if (typeof window.close === 'function') {
+        console.log('Closing via window.close()');
+        window.close();
     } else {
         console.log('Cannot close app from browser');
     }
