@@ -1,77 +1,120 @@
 // ============================================
-// API Service - Global Functions
+// API Service - Compatible with webOS 3.0/3.5 (Chromium 53)
+// No async/await, no fetch — uses XMLHttpRequest
 // ============================================
 
 // Global variable for matches
 var footballMatches = [];
 
-// Fallback data nếu API lỗi
+// Fallback data if API fails or is geo-blocked
 function loadFallbackMatches() {
     footballMatches = [
         {
             id: 1,
-            matchId: "fallback1",
-            title: "Đang tải...",
-            homeName: "Đang tải",
-            awayName: "trận đấu",
-            homeLogo: "https://via.placeholder.com/100x100?text=?",
-            awayLogo: "https://via.placeholder.com/100x100?text=?",
-            league: "Vui lòng đợi",
-            leagueShortName: "Loading",
-            commentator: "System",
-            commentatorAvatar: "https://via.placeholder.com/50x50?text=BLV",
+            matchId: 'fallback1',
+            title: 'Đang tải...',
+            homeName: 'Đang tải',
+            awayName: 'trận đấu',
+            homeLogo: 'https://via.placeholder.com/100x100?text=?',
+            awayLogo: 'https://via.placeholder.com/100x100?text=?',
+            league: 'Vui lòng đợi',
+            leagueShortName: 'Loading',
+            commentator: 'System',
+            commentatorAvatar: 'https://via.placeholder.com/50x50?text=BLV',
             isLive: false,
             status: 0,
             homeScore: 0,
             awayScore: 0,
             viewNumber: 0,
-            type: "hls"
+            type: 'hls'
         }
     ];
 }
 
-// Fetch with timeout
-async function fetchWithTimeout(url, options, timeout) {
-    timeout = timeout || 10000; // Default 10 seconds
+// XMLHttpRequest wrapper — works on webOS 3.0/3.5
+function xhrGet(url, timeout, onSuccess, onError) {
+    var xhr = new XMLHttpRequest();
+    var timedOut = false;
+    var timer = setTimeout(function() {
+        timedOut = true;
+        xhr.abort();
+        onError(new Error('Request timeout after ' + timeout + 'ms'));
+    }, timeout);
 
-    return Promise.race([
-        fetch(url, options),
-        new Promise(function(_, reject) {
-            setTimeout(function() {
-                reject(new Error('Request timeout after ' + timeout + 'ms'));
-            }, timeout);
-        })
-    ]);
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        clearTimeout(timer);
+        if (timedOut) return;
+        if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                onSuccess(data);
+            } catch (e) {
+                onError(new Error('JSON parse error: ' + e.message));
+            }
+        } else {
+            onError(new Error('HTTP error ' + xhr.status));
+        }
+    };
+    xhr.onerror = function() {
+        clearTimeout(timer);
+        if (!timedOut) onError(new Error('Network error'));
+    };
+    xhr.send();
 }
 
-// Load matches from API
-async function loadMatchesFromAPI() {
+function xhrPost(url, timeout, onSuccess, onError) {
+    var xhr = new XMLHttpRequest();
+    var timedOut = false;
+    var timer = setTimeout(function() {
+        timedOut = true;
+        xhr.abort();
+        onError(new Error('Request timeout after ' + timeout + 'ms'));
+    }, timeout);
+
+    xhr.open('POST', url, true);
+    xhr.setRequestHeader('accept', '*/*');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        clearTimeout(timer);
+        if (timedOut) return;
+        if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                onSuccess(data);
+            } catch (e) {
+                onError(new Error('JSON parse error: ' + e.message));
+            }
+        } else {
+            onError(new Error('HTTP error ' + xhr.status));
+        }
+    };
+    xhr.onerror = function() {
+        clearTimeout(timer);
+        if (!timedOut) onError(new Error('Network error'));
+    };
+    xhr.send('');
+}
+
+// Load matches from API — callback-based (no async/await)
+function loadMatchesFromAPI(onDone) {
     console.log('🔄 Starting to load matches from API...');
-    console.log('API URL:', APP_CONFIG.API_URL + '/get-livestream-group');
+    var url = APP_CONFIG.API_URL + '/get-livestream-group';
+    console.log('API URL:', url);
 
-    try {
-        var response = await fetchWithTimeout(
-            APP_CONFIG.API_URL + '/get-livestream-group',
-            {},
-            15000 // 15 second timeout
-        );
-        console.log('📡 API Response status:', response.status);
+    xhrGet(url, 15000, function(data) {
+        console.log('📦 API Response data received');
 
-        var data = await response.json();
-        console.log('📦 API Response data:', data);
-
-        // Check if we have matches data
         if (data.value && data.value.datas && Array.isArray(data.value.datas) && data.value.datas.length > 0) {
-            console.log('✅ Found ' + data.value.datas.length + ' matches in API response');
+            console.log('✅ Found ' + data.value.datas.length + ' matches');
 
-            // Sort: live matches first (isLiveHomePage = true)
             var matches = data.value.datas.sort(function(a, b) {
                 if (a.isLiveHomePage && !b.isLiveHomePage) return -1;
                 if (!a.isLiveHomePage && b.isLiveHomePage) return 1;
                 return 0;
             });
 
-            // Convert API format to app format
             footballMatches = matches.map(function(match) {
                 return {
                     id: match.matchId,
@@ -93,99 +136,84 @@ async function loadMatchesFromAPI() {
                     matchTime: match.matchTime,
                     viewNumber: match.viewNumber,
                     halfStartTime: match.halfStartTime,
-                    type: "hls"
+                    type: 'hls'
                 };
             });
 
-            console.log('✅ Loaded ' + footballMatches.length + ' matches from API');
+            console.log('✅ Loaded ' + footballMatches.length + ' matches');
         } else {
             console.error('❌ Invalid API response format');
             loadFallbackMatches();
         }
-    } catch (error) {
-        console.error('❌ Error loading matches from API:', error);
+
+        if (typeof onDone === 'function') onDone();
+    }, function(error) {
+        console.error('❌ Error loading matches from API:', error.message);
         loadFallbackMatches();
-    }
+        if (typeof onDone === 'function') onDone();
+    });
 }
 
-// Load match detail and video URL
-async function loadMatchDetail(matchId) {
+// Load match detail and video URL — callback-based (no async/await)
+function loadMatchDetail(matchId, onDone) {
     console.log('🎬 Loading video for match: ' + matchId);
+    var url = APP_CONFIG.API_URL + '/match-detail?matchId=' + matchId;
 
-    try {
-        // Call API POST to get match detail and video link
-        var response = await fetchWithTimeout(
-            APP_CONFIG.API_URL + '/match-detail?matchId=' + matchId,
-            {
-                method: 'POST',
-                headers: {
-                    'accept': '*/*'
-                },
-                body: ''
-            },
-            15000 // 15 second timeout
-        );
-
-        console.log('📡 Match detail API response status:', response.status);
-
-        var data = await response.json();
-        console.log('📦 Match detail data:', data);
+    xhrPost(url, 15000, function(data) {
+        console.log('📦 Match detail data received');
 
         var videoUrl = null;
         var matchData = null;
 
-        // Try to get linkLive from match detail
         if (data.value && data.value.datas) {
             matchData = data.value.datas;
             videoUrl = matchData.linkLive;
         }
 
-        // If no linkLive, try fallback API
-        if (!videoUrl) {
-            console.log('⚠️ No linkLive found, trying fallback API...');
-
-            try {
-                var fallbackResponse = await fetch(APP_CONFIG.API_URL + '/get-link-register?domain=LinkVideo');
-                var fallbackData = await fallbackResponse.json();
-
-                console.log('📦 Fallback API response:', fallbackData);
-
-                // Parse response structure: value.data[] array, find domain "LinkVideo"
-                if (fallbackData.value && fallbackData.value.data && Array.isArray(fallbackData.value.data)) {
-                    var linkVideoItem = fallbackData.value.data.find(function(item) {
-                        return item.domain === 'LinkVideo';
-                    });
-                    if (linkVideoItem && linkVideoItem.link) {
-                        videoUrl = linkVideoItem.link;
-                        console.log('✅ Got fallback video URL: ' + videoUrl);
-                    } else {
-                        console.error('❌ LinkVideo not found in fallback data');
-                    }
-                } else {
-                    console.error('❌ Invalid fallback API response structure');
-                }
-            } catch (fallbackError) {
-                console.error('❌ Fallback API error:', fallbackError);
+        if (videoUrl) {
+            console.log('✅ Got video URL from match detail');
+            if (typeof onDone === 'function') {
+                onDone({ videoUrl: videoUrl, matchData: matchData, success: true });
             }
         } else {
-            console.log('✅ Got video URL from match detail: ' + videoUrl);
-        }
+            // Fallback: fetch video URL from link-register API
+            console.log('⚠️ No linkLive, trying fallback API...');
+            var fallbackUrl = APP_CONFIG.API_URL + '/get-link-register?domain=LinkVideo';
 
-        // Return match detail with video URL
-        return {
-            videoUrl: videoUrl,
-            matchData: matchData,
-            success: !!videoUrl
-        };
-    } catch (error) {
-        console.error('❌ Error loading match detail:', error);
-        return {
-            videoUrl: null,
-            matchData: null,
-            success: false,
-            error: error.message
-        };
-    }
+            xhrGet(fallbackUrl, 10000, function(fallbackData) {
+                var foundUrl = null;
+
+                if (fallbackData.value && fallbackData.value.data && Array.isArray(fallbackData.value.data)) {
+                    for (var i = 0; i < fallbackData.value.data.length; i++) {
+                        if (fallbackData.value.data[i].domain === 'LinkVideo' && fallbackData.value.data[i].link) {
+                            foundUrl = fallbackData.value.data[i].link;
+                            break;
+                        }
+                    }
+                }
+
+                if (foundUrl) {
+                    console.log('✅ Got fallback video URL');
+                } else {
+                    console.error('❌ LinkVideo not found in fallback data');
+                }
+
+                if (typeof onDone === 'function') {
+                    onDone({ videoUrl: foundUrl, matchData: matchData, success: !!foundUrl });
+                }
+            }, function(fallbackError) {
+                console.error('❌ Fallback API error:', fallbackError.message);
+                if (typeof onDone === 'function') {
+                    onDone({ videoUrl: null, matchData: null, success: false, error: fallbackError.message });
+                }
+            });
+        }
+    }, function(error) {
+        console.error('❌ Error loading match detail:', error.message);
+        if (typeof onDone === 'function') {
+            onDone({ videoUrl: null, matchData: null, success: false, error: error.message });
+        }
+    });
 }
 
 console.log('✅ API Service loaded');

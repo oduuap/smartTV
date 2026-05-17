@@ -204,44 +204,69 @@ function handleBackButton() {
 
 // Initialize screen manager
 function initScreenManager() {
-    // Setup WebOS back button integration
-    if (typeof window.webOSSystem !== 'undefined') {
-        window.webOSSystem.platformBack = function() {
-            handleBackButton();
-        };
-    }
+    // CRITICAL: webOSLaunch — fired on first launch
+    // Must call webOSSystem.ready() so webOS exits the system loading screen.
+    // Without this, webOS 3.0/3.5 shows infinite loading.
+    document.addEventListener('webOSLaunch', function(event) {
+        console.log('webOSLaunch event received');
+        try {
+            var params = event.detail ? JSON.parse(event.detail) : {};
+            console.log('Launch params:', params);
+        } catch (e) {
+            console.warn('Could not parse launch params:', e);
+        }
+        if (typeof window.webOSSystem !== 'undefined' && window.webOSSystem.ready) {
+            window.webOSSystem.ready();
+            console.log('✅ webOSSystem.ready() called on webOSLaunch');
+        }
+    });
 
-    // Prevent exit confirmation dialog
-    window.onbeforeunload = null;
-
-    // Handle webOS events
-    document.addEventListener('webOSRelaunch', function() {
-        console.log('webOS Relaunch event');
+    // webOSRelaunch — app already running, user opens it again
+    document.addEventListener('webOSRelaunch', function(event) {
+        console.log('webOSRelaunch event received');
+        try {
+            var params = event.detail ? JSON.parse(event.detail) : {};
+            console.log('Relaunch params:', params);
+        } catch (e) {
+            console.warn('Could not parse relaunch params:', e);
+        }
+        if (currentScreen === SCREEN_IDS.PLAYER) {
+            stopVideo();
+        }
+        showScreen(SCREEN_IDS.MENU);
+        if (typeof window.webOSSystem !== 'undefined' && window.webOSSystem.ready) {
+            window.webOSSystem.ready();
+        }
     });
 
     document.addEventListener('webOSLocaleChange', function() {
         console.log('webOS Locale change');
     });
 
-    // WebOS back button handler (legacy)
-    if (typeof window.PalmSystem !== 'undefined') {
-        window.addEventListener('load', function() {
-            if (window.Mojo && window.Mojo.stageController) {
-                window.Mojo.stageController.pushScene({
-                    name: 'main',
-                    disableSceneScroller: true
-                });
-            }
-        });
+    // Back button via platformBack (hardware back key on remote)
+    if (typeof window.webOSSystem !== 'undefined') {
+        window.webOSSystem.platformBack = function() {
+            handleBackButton();
+        };
     }
 
-    // Handle browser back button
+    // Prevent browser unload dialog
+    window.onbeforeunload = null;
+
+    // Handle browser back button (popstate)
     window.addEventListener('popstate', function() {
         console.log('Popstate event:', currentScreen);
-
-        // Use handleBackButton() to ensure dialog is shown
         handleBackButton();
     });
+
+    // Fallback: some older firmware may not fire webOSLaunch at all.
+    // Call ready() after a short delay to ensure the app is never stuck.
+    if (typeof window.webOSSystem !== 'undefined' && window.webOSSystem.ready) {
+        setTimeout(function() {
+            window.webOSSystem.ready();
+            console.log('✅ webOSSystem.ready() called (fallback)');
+        }, 200);
+    }
 
     console.log('✅ Screen manager initialized');
 }
