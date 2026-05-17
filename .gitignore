@@ -9,3 +9,4 @@ install-to-emulator.sh
 SportsTV-Package.zip
 *.ipk
 ipk/
+.claude/
