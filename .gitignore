@@ -7,3 +7,5 @@ GUI-CHO-NGUOI-KHAC.txt
 GO.sh
 install-to-emulator.sh
 SportsTV-Package.zip
+*.ipk
+ipk/
